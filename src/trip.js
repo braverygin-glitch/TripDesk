@@ -1,3 +1,31 @@
+const StorageAdapter = {
+    get(key) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.warn("Storage parse error:", key);
+            return null;
+        }
+    },
+
+    set(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+            console.warn("Storage set error:", key);
+        }
+    },
+
+    remove(key) {
+        localStorage.removeItem(key);
+    }
+};
+
+/* =========================
+   LOCATION DICT
+========================= */
+
 const LocationDict = {
     countries: {
         "스페인": "Spain",
@@ -16,91 +44,123 @@ const LocationDict = {
         "포르투": "Porto",
         "리스본": "Lisbon",
         "마드리드": "Madrid",
-        "톨레도": "Toledo",
-        "신트라": "Sintra",
         "런던": "London",
-        "취리히": "Zurich",
         "파리": "Paris",
         "도쿄": "Tokyo"
     }
 };
 
+/* =========================
+   TRIP STORE (SAFE)
+========================= */
+
 const TripStore = {
     tripsKey: "tripdesk_trips",
-    currentTripKey: "tripdesk_current_trip_id",
-    lastTripKey: "tripdesk_last_trip_id",
+    currentKey: "tripdesk_current_trip",
+    lastKey: "tripdesk_last_trip",
 
     getTrips() {
-        return JSON.parse(localStorage.getItem(this.tripsKey) || "[]");
+        return StorageAdapter.get(this.tripsKey) || [];
     },
 
     saveTrips(trips) {
-        localStorage.setItem(this.tripsKey, JSON.stringify(trips));
+        StorageAdapter.set(this.tripsKey, Array.isArray(trips) ? trips : []);
     },
 
     getCurrentTrip() {
-        const id = localStorage.getItem(this.currentTripKey);
-        return this.getTrips().find(t => t.id === id) || null;
+        const id = StorageAdapter.get(this.currentKey);
+        if (!id) return null;
+
+        const trips = this.getTrips();
+        return trips.find(t => t && t.id === id) || null;
     },
 
     setCurrentTrip(id) {
-        localStorage.setItem(this.currentTripKey, id);
-        localStorage.setItem(this.lastTripKey, id);
+        if (!id) return;
+
+        StorageAdapter.set(this.currentKey, id);
+        StorageAdapter.set(this.lastKey, id);
     },
 
-    getLastTripId() {
-        return localStorage.getItem(this.lastTripKey);
+    getLastTrip() {
+        return StorageAdapter.get(this.lastKey);
     },
 
     createTrip(trip) {
+        if (!trip || !trip.id) return;
+
         const trips = this.getTrips();
         trips.push(trip);
         this.saveTrips(trips);
-
         this.setCurrentTrip(trip.id);
+    },
+
+    updateTrip(updated) {
+        if (!updated || !updated.id) return;
+
+        const trips = this.getTrips();
+        const idx = trips.findIndex(t => t && t.id === updated.id);
+
+        if (idx === -1) return;
+
+        trips[idx] = {
+            ...trips[idx],
+            ...updated,
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveTrips(trips);
     },
 
     deleteCurrentTrip() {
         const current = this.getCurrentTrip();
         if (!current) return;
 
-        const trips = this.getTrips().filter(t => t.id !== current.id);
+        const trips = this.getTrips().filter(t => t && t.id !== current.id);
         this.saveTrips(trips);
-
-        localStorage.removeItem(this.currentTripKey);
-    },
-
-    updateTrip(updatedTrip) {
-        const trips = this.getTrips();
-
-        const index = trips.findIndex(t => t.id === updatedTrip.id);
-        if (index === -1) return;
-
-        trips[index] = {
-            ...trips[index],
-            ...updatedTrip,
-            updatedAt: new Date().toISOString()
-        };
-
-        this.saveTrips(trips);
+        StorageAdapter.remove(this.currentKey);
     }
 };
 
+/* =========================
+   UTIL SAFE
+========================= */
+
 function makeTripId(name) {
-    return name
-        .trim()
-        .replace(/\s+/g, "_")
-        .replace(/[^\w가-힣_]/g, "")
-        || "New_Trip";
+    if (!name || typeof name !== "string") return "trip_" + Date.now();
+
+    return (
+        name
+            .trim()
+            .replace(/\s+/g, "_")
+            .replace(/[^\w가-힣_]/g, "")
+            || "trip_" + Date.now()
+    );
 }
 
 function makeLocationList(text, dict) {
+    if (!text || typeof text !== "string") return [];
+
     return text
         .split(/\n|,/)
-        .map(t => t.trim())
-        .filter(Boolean)
-        .map(displayName => ({
-            displayName,
-            name: dict[displayName] || displayName
+        .map(v => v.trim())
+        .filter(v => v && v.length > 0)
+        .map(name => ({
+            displayName: name,
+            name: (dict && dict[name]) ? dict[name] : name
         }));
+}
+
+/* =========================
+   SCHEDULE FACTORY
+========================= */
+
+function createSchedule(date, city) {
+    if (!date || !city) return null;
+
+    return {
+        date,
+        city,
+        items: []
+    };
 }

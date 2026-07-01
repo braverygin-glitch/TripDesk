@@ -1,194 +1,341 @@
+
 const screen = document.getElementById("screen");
 const tripTitle = document.getElementById("tripTitle");
 
+let editing = null;
+let dragState = { fromDay: null, fromIndex: null };
+
 /* =========================
-   RESTORE LAST TRIP
+   INIT
 ========================= */
+
+function init() {
+    restoreLastTrip();
+    renderHome();
+}
+
 function restoreLastTrip() {
-    const lastId = TripStore.getLastTripId();
-    if (!lastId) return;
+    const last = TripStore.getLastTrip();
+    if (!last) return;
 
     const trips = TripStore.getTrips();
-    const exists = trips.find(t => t.id === lastId);
+    const exists = trips.find(t => t?.id === last);
 
-    if (exists) {
-        TripStore.setCurrentTrip(lastId);
-    }
+    if (exists) TripStore.setCurrentTrip(last);
 }
 
 /* =========================
    HOME
 ========================= */
-function renderHome() {
-    const currentTrip = TripStore.getCurrentTrip();
 
-    if (!currentTrip) {
-        tripTitle.textContent = "여행을 선택하세요";
+function renderHome() {
+    const trip = TripStore.getCurrentTrip();
+
+    if (!trip) {
+        tripTitle.textContent = "여행 선택";
 
         screen.innerHTML = `
-            <section class="card hero-card">
-                <p class="label">Trip Desk</p>
-                <h2>현재 여행 없음</h2>
-                <p>여행을 선택하거나 새로 만드세요.</p>
-            </section>
-
             <section class="card">
-                <button class="menu-row" onclick="renderTripList()">📂 여행 목록</button>
-                <button class="menu-row" onclick="renderCreateTrip()">➕ 새 여행</button>
+                <h3>여행 없음</h3>
+                <button onclick="renderCreateTrip()">새 여행</button>
+                <button onclick="renderExcelImport()">엑셀 입력</button>
             </section>
         `;
         return;
     }
 
-    tripTitle.textContent = currentTrip.name;
+    tripTitle.textContent = trip.name || "";
+
+    const schedule = trip.schedule || [];
 
     screen.innerHTML = `
-        <section class="card hero-card">
-            <p class="label">현재 여행</p>
-            <h2>${currentTrip.name}</h2>
-            <p>${currentTrip.startDate} ~ ${currentTrip.endDate}</p>
+        <section class="card">
+            <h2>${trip.name || ""}</h2>
+            <p>${trip.startDate || ""} ~ ${trip.endDate || ""}</p>
         </section>
 
         <section class="card">
-            <h3>국가</h3>
-            ${
-                currentTrip.countries.map(c =>
-                    `<p>${c.displayName} / ${c.name}</p>`
-                ).join("")
-            }
+            <h3>📅 일정</h3>
+
+            ${schedule.length === 0 ? "<p>일정 없음</p>" : ""}
+
+            ${schedule.map((day, di) => `
+                <div style="margin-bottom:16px;">
+                    <strong>${day.date || ""} / ${day.city || ""}</strong>
+
+                    ${(day.items || []).map((item, ii) => `
+                        <div
+                            draggable="true"
+                            ondragstart="onDragStart(event, ${di}, ${ii})"
+                            ondragover="onDragOver(event)"
+                            ondrop="onDrop(event, ${di}, ${ii})"
+                            style="
+                                padding:10px;
+                                margin:6px 0;
+                                border:1px solid #ddd;
+                                border-radius:10px;
+                                background:#fff;
+                            "
+                        >
+                            ⏰ ${item.time || "-"} / ${item.title || ""}
+
+                            <button onclick="editItem(${di},${ii})">수정</button>
+                            <button onclick="deleteItem(${di},${ii})">삭제</button>
+                        </div>
+                    `).join("")}
+
+                    <button onclick="openAddItem('${day.date}','${day.city}')">
+                        + 일정 추가
+                    </button>
+                </div>
+            `).join("")}
         </section>
 
         <section class="card">
-            <h3>통화</h3>
-            <p>${currentTrip.baseCurrency}</p>
-        </section>
-
-        <section class="card">
-            <button class="menu-row" onclick="renderEditTrip('${currentTrip.id}')">
-                ✏ 수정
-            </button>
+            <button onclick="renderAddDay()">+ 날짜 추가</button>
+            <button onclick="renderExcelImport()">📥 엑셀 입력</button>
         </section>
     `;
 }
 
 /* =========================
-   LIST
+   DRAG LOGIC
 ========================= */
-function renderTripList() {
-    const trips = TripStore.getTrips();
 
-    screen.innerHTML = `
-        <section class="card">
-            <h3>여행 목록</h3>
-
-            ${trips.map(t => `
-                <div class="menu-row" onclick="selectTrip('${t.id}')">
-                    <strong>${t.name}</strong><br>
-                    <small>${t.startDate} ~ ${t.endDate}</small>
-                </div>
-            `).join("")}
-        </section>
-    `;
+function onDragStart(e, dayIndex, itemIndex) {
+    dragState.fromDay = dayIndex;
+    dragState.fromIndex = itemIndex;
 }
 
-function selectTrip(id) {
-    TripStore.setCurrentTrip(id);
+function onDragOver(e) {
+    e.preventDefault();
+}
+
+function onDrop(e, toDay, toIndex) {
+    e.preventDefault();
+
+    const trip = TripStore.getCurrentTrip();
+    if (!trip) return;
+
+    const fromDay = dragState.fromDay;
+    const fromIndex = dragState.fromIndex;
+
+    if (fromDay === null || fromIndex === null) return;
+
+    const fromItems = trip.schedule[fromDay]?.items;
+    const toItems = trip.schedule[toDay]?.items;
+
+    if (!fromItems || !toItems) return;
+
+    const item = fromItems.splice(fromIndex, 1)[0];
+    if (!item) return;
+
+    toItems.splice(toIndex, 0, item);
+
+    TripStore.updateTrip(trip);
+
+    dragState = { fromDay: null, fromIndex: null };
+
     renderHome();
 }
 
 /* =========================
-   CREATE
+   DAY ADD
 ========================= */
-function renderCreateTrip() {
-    tripTitle.textContent = "새 여행";
 
+function renderAddDay() {
     screen.innerHTML = `
         <section class="card">
-            <h3>새 여행</h3>
+            <h3>날짜 추가</h3>
 
-            <label>이름</label>
-            <input id="name" class="input">
+            <input id="date" type="date">
+            <input id="city" placeholder="도시">
 
-            <label>출발</label>
-            <input id="start" type="date" class="input">
-
-            <label>귀국</label>
-            <input id="end" type="date" class="input">
-
-            <label>국가</label>
-            <textarea id="countries" class="input"></textarea>
-
-            <label>통화</label>
-            <select id="currency" class="input">
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-                <option value="KRW">KRW</option>
-            </select>
-
-            <button class="primary-button" onclick="createTrip()">생성</button>
+            <button onclick="addDay()">추가</button>
         </section>
     `;
 }
 
-function createTrip() {
-    const name = document.getElementById("name").value;
-    const start = document.getElementById("start").value;
-    const end = document.getElementById("end").value;
-    const countries = document.getElementById("countries").value;
-    const currency = document.getElementById("currency").value;
+function addDay() {
+    const trip = TripStore.getCurrentTrip();
+    if (!trip) return;
 
-    const trip = {
-        id: makeTripId(name),
-        name,
-        startDate: start,
-        endDate: end,
-        countries: makeLocationList(countries, LocationDict.countries),
-        baseCurrency: currency,
-        currencies: [currency],
-        createdAt: new Date().toISOString()
-    };
+    const date = document.getElementById("date").value;
+    const city = document.getElementById("city").value;
 
-    TripStore.createTrip(trip);
+    if (!date || !city) return;
+
+    if (!trip.schedule) trip.schedule = [];
+
+    trip.schedule.push({
+        date,
+        city,
+        items: []
+    });
+
+    TripStore.updateTrip(trip);
+    renderHome();
+}
+
+/* =========================
+   ITEM ADD
+========================= */
+
+function openAddItem(date, city) {
+    screen.innerHTML = `
+        <section class="card">
+            <h3>일정 추가</h3>
+
+            <div>${date} / ${city}</div>
+
+            <input id="time" type="time">
+            <input id="title" placeholder="일정">
+            <input id="memo" placeholder="메모">
+
+            <button onclick="addItem('${date}','${city}')">추가</button>
+        </section>
+    `;
+}
+
+function addItem(date, city) {
+    const trip = TripStore.getCurrentTrip();
+    if (!trip) return;
+
+    const day = trip.schedule.find(d => d.date === date && d.city === city);
+    if (!day) return;
+
+    day.items.push({
+        time: document.getElementById("time").value || "",
+        title: document.getElementById("title").value || "",
+        memo: document.getElementById("memo").value || ""
+    });
+
+    TripStore.updateTrip(trip);
     renderHome();
 }
 
 /* =========================
    EDIT
 ========================= */
-function renderEditTrip(id) {
-    const trip = TripStore.getTrips().find(t => t.id === id);
+
+function editItem(di, ii) {
+    const trip = TripStore.getCurrentTrip();
+    const item = trip.schedule[di].items[ii];
+
+    editing = { di, ii };
 
     screen.innerHTML = `
         <section class="card">
             <h3>수정</h3>
 
-            <input id="editName" class="input" value="${trip.name}">
-            <input id="editStart" type="date" class="input" value="${trip.startDate}">
-            <input id="editEnd" type="date" class="input" value="${trip.endDate}">
+            <input id="time" value="${item.time || ""}">
+            <input id="title" value="${item.title || ""}">
+            <input id="memo" value="${item.memo || ""}">
 
-            <button class="primary-button" onclick="saveEdit('${id}')">저장</button>
+            <button onclick="saveEditItem()">저장</button>
         </section>
     `;
 }
 
-function saveEdit(id) {
-    const name = document.getElementById("editName").value;
-    const start = document.getElementById("editStart").value;
-    const end = document.getElementById("editEnd").value;
+function saveEditItem() {
+    const trip = TripStore.getCurrentTrip();
+    const { di, ii } = editing;
 
-    TripStore.updateTrip({
-        id,
-        name,
-        startDate: start,
-        endDate: end
-    });
+    trip.schedule[di].items[ii] = {
+        time: document.getElementById("time").value || "",
+        title: document.getElementById("title").value || "",
+        memo: document.getElementById("memo").value || ""
+    };
 
-    TripStore.setCurrentTrip(id);
+    TripStore.updateTrip(trip);
+    editing = null;
     renderHome();
 }
 
 /* =========================
-   INIT
+   DELETE
 ========================= */
-restoreLastTrip();
-renderHome();
+
+function deleteItem(di, ii) {
+    const trip = TripStore.getCurrentTrip();
+
+    trip.schedule[di].items.splice(ii, 1);
+
+    TripStore.updateTrip(trip);
+    renderHome();
+}
+
+/* =========================
+   EXCEL (기존 유지)
+========================= */
+
+function renderExcelImport() {
+    screen.innerHTML = `
+        <section class="card">
+            <h3>엑셀 입력</h3>
+
+            <textarea id="excelInput" placeholder="date	city	title	type"></textarea>
+
+            <button onclick="runExcelImport()">가져오기</button>
+        </section>
+    `;
+}
+
+function parseExcel(text) {
+    return text.trim().split("\n").map(line => {
+        const [date, city, title, type] = line.split("\t");
+
+        return {
+            date: (date || "").trim(),
+            city: (city || "").trim(),
+            title: (title || "").trim(),
+            type: (type || "place").trim()
+        };
+    });
+}
+
+function buildSchedule(items) {
+    const map = {};
+
+    items.forEach(i => {
+        const key = i.date + "_" + i.city;
+
+        if (!map[key]) {
+            map[key] = {
+                date: i.date,
+                city: i.city,
+                items: []
+            };
+        }
+
+        map[key].items.push({
+            time: "",
+            title: i.title,
+            type: i.type
+        });
+    });
+
+    return Object.values(map);
+}
+
+function runExcelImport() {
+    const trip = TripStore.getCurrentTrip();
+    if (!trip) return;
+
+    const text = document.getElementById("excelInput").value;
+    if (!text) return;
+
+    const parsed = parseExcel(text);
+    const schedule = buildSchedule(parsed);
+
+    trip.schedule = schedule;
+
+    TripStore.updateTrip(trip);
+    renderHome();
+}
+
+/* =========================
+   START
+========================= */
+
+init();
