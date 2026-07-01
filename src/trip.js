@@ -28,6 +28,7 @@ const LocationDict = {
 const TripStore = {
     tripsKey: "tripdesk_trips",
     currentTripKey: "tripdesk_current_trip_id",
+    lastTripKey: "tripdesk_last_trip_id",
 
     getTrips() {
         return JSON.parse(localStorage.getItem(this.tripsKey) || "[]");
@@ -38,18 +39,24 @@ const TripStore = {
     },
 
     getCurrentTrip() {
-        const currentId = localStorage.getItem(this.currentTripKey);
-        return this.getTrips().find(trip => trip.id === currentId) || null;
+        const id = localStorage.getItem(this.currentTripKey);
+        return this.getTrips().find(t => t.id === id) || null;
     },
 
     setCurrentTrip(id) {
         localStorage.setItem(this.currentTripKey, id);
+        localStorage.setItem(this.lastTripKey, id);
+    },
+
+    getLastTripId() {
+        return localStorage.getItem(this.lastTripKey);
     },
 
     createTrip(trip) {
         const trips = this.getTrips();
         trips.push(trip);
         this.saveTrips(trips);
+
         this.setCurrentTrip(trip.id);
     },
 
@@ -57,9 +64,25 @@ const TripStore = {
         const current = this.getCurrentTrip();
         if (!current) return;
 
-        const trips = this.getTrips().filter(trip => trip.id !== current.id);
+        const trips = this.getTrips().filter(t => t.id !== current.id);
         this.saveTrips(trips);
+
         localStorage.removeItem(this.currentTripKey);
+    },
+
+    updateTrip(updatedTrip) {
+        const trips = this.getTrips();
+
+        const index = trips.findIndex(t => t.id === updatedTrip.id);
+        if (index === -1) return;
+
+        trips[index] = {
+            ...trips[index],
+            ...updatedTrip,
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveTrips(trips);
     }
 };
 
@@ -74,7 +97,7 @@ function makeTripId(name) {
 function makeLocationList(text, dict) {
     return text
         .split(/\n|,/)
-        .map(item => item.trim())
+        .map(t => t.trim())
         .filter(Boolean)
         .map(displayName => ({
             displayName,
