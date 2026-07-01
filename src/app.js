@@ -1,10 +1,9 @@
 const screen = document.getElementById("screen");
 const tripTitle = document.getElementById("tripTitle");
 
-function getCurrentTripName(defaultText) {
-    const currentTrip = TripStore.getCurrentTrip();
-    return currentTrip ? currentTrip.name : defaultText;
-}
+/* -----------------------------
+   HOME
+------------------------------ */
 
 function renderHome() {
     const currentTrip = TripStore.getCurrentTrip();
@@ -16,14 +15,17 @@ function renderHome() {
             <section class="card hero-card">
                 <p class="label">Trip Desk</p>
                 <h2>현재 여행 없음</h2>
-                <p>새 여행을 만들면 일정과 예약을 관리할 수 있습니다.</p>
+                <p>새 여행을 만들거나 기존 여행을 선택하세요.</p>
             </section>
 
             <section class="card">
-                <h3>시작하기</h3>
-                <div class="menu-list">
-                    <button class="menu-row" onclick="renderCreateTrip()">➕ 새 여행 만들기</button>
-                </div>
+                <button class="menu-row" onclick="renderTripList()">
+                    📂 여행 목록 보기
+                </button>
+
+                <button class="menu-row" onclick="renderCreateTrip()">
+                    ➕ 새 여행 만들기
+                </button>
             </section>
         `;
         return;
@@ -40,21 +42,73 @@ function renderHome() {
 
         <section class="card">
             <h3>국가</h3>
-            ${currentTrip.countries.map(c => `<p>${c.displayName} / ${c.name}</p>`).join("")}
-        </section>
-
-        <section class="card">
-            <h3>도시</h3>
-            ${currentTrip.cities.map(c => `<p>${c.displayName} / ${c.name}</p>`).join("")}
+            ${
+                currentTrip.countries.length
+                    ? currentTrip.countries.map(c => `<p>${c.displayName} / ${c.name}</p>`).join("")
+                    : `<p class="empty">등록된 국가 없음</p>`
+            }
         </section>
 
         <section class="card">
             <h3>통화</h3>
             <p><strong>기본 통화</strong><br>${currentTrip.baseCurrency}</p>
-            <p><strong>사용 통화</strong><br>${currentTrip.currencies.join(", ")}</p>
+            <p class="empty">사용 통화는 비용 단계에서 자동 추가됩니다.</p>
+        </section>
+
+        <section class="card">
+            <h3>메모</h3>
+            <p class="empty">${currentTrip.memo || "메모 없음"}</p>
         </section>
     `;
 }
+
+/* -----------------------------
+   TRIP LIST
+------------------------------ */
+
+function renderTripList() {
+    const trips = TripStore.getTrips();
+
+    if (trips.length === 0) {
+        screen.innerHTML = `
+            <section class="card">
+                <h3>여행 없음</h3>
+                <p class="empty">새 여행을 만들어 주세요.</p>
+                <button class="primary-button" onclick="renderCreateTrip()">
+                    ➕ 새 여행 만들기
+                </button>
+            </section>
+        `;
+        return;
+    }
+
+    screen.innerHTML = `
+        <section class="card">
+            <h3>내 여행 목록</h3>
+            ${trips.map(trip => `
+                <div class="menu-row" onclick="selectTrip('${trip.id}')">
+                    <strong>${trip.name}</strong><br>
+                    <small>${trip.startDate} ~ ${trip.endDate}</small>
+                </div>
+            `).join("")}
+        </section>
+
+        <section class="card">
+            <button class="primary-button" onclick="renderCreateTrip()">
+                ➕ 새 여행 만들기
+            </button>
+        </section>
+    `;
+}
+
+function selectTrip(id) {
+    TripStore.setCurrentTrip(id);
+    renderHome();
+}
+
+/* -----------------------------
+   CREATE TRIP
+------------------------------ */
 
 function renderCreateTrip() {
     tripTitle.textContent = "새 여행 만들기";
@@ -75,9 +129,6 @@ function renderCreateTrip() {
             <label>국가</label>
             <textarea id="countries" class="input" rows="3" placeholder="스페인&#10;포르투갈"></textarea>
 
-            <label>도시</label>
-            <textarea id="cities" class="input" rows="5" placeholder="바르셀로나&#10;그라나다&#10;세비야&#10;포르투&#10;리스본&#10;마드리드"></textarea>
-
             <label>기본 통화</label>
             <select id="baseCurrency" class="input">
                 <option value="KRW">KRW</option>
@@ -88,20 +139,12 @@ function renderCreateTrip() {
                 <option value="JPY">JPY</option>
             </select>
 
-            <label>사용 통화</label>
-            <div class="checkbox-list">
-                <label><input type="checkbox" name="currency" value="KRW" checked> KRW 원</label>
-                <label><input type="checkbox" name="currency" value="EUR" checked> EUR 유로</label>
-                <label><input type="checkbox" name="currency" value="GBP"> GBP 파운드</label>
-                <label><input type="checkbox" name="currency" value="CHF"> CHF 스위스 프랑</label>
-                <label><input type="checkbox" name="currency" value="USD"> USD 달러</label>
-                <label><input type="checkbox" name="currency" value="JPY"> JPY 엔</label>
-            </div>
-
             <label>여행 메모</label>
             <textarea id="memo" class="input" rows="3" placeholder="선택사항"></textarea>
 
-            <button class="primary-button" onclick="createTrip()">여행 생성</button>
+            <button class="primary-button" onclick="createTrip()">
+                여행 생성
+            </button>
         </section>
     `;
 }
@@ -111,12 +154,8 @@ function createTrip() {
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
     const countriesText = document.getElementById("countries").value;
-    const citiesText = document.getElementById("cities").value;
     const baseCurrency = document.getElementById("baseCurrency").value;
     const memo = document.getElementById("memo").value.trim();
-
-    const currencies = Array.from(document.querySelectorAll('input[name="currency"]:checked'))
-        .map(input => input.value);
 
     if (!name || !startDate || !endDate) {
         alert("여행 이름, 출발일, 귀국일은 필수입니다.");
@@ -129,9 +168,9 @@ function createTrip() {
         startDate,
         endDate,
         countries: makeLocationList(countriesText, LocationDict.countries),
-        cities: makeLocationList(citiesText, LocationDict.cities),
+        cities: [],
         baseCurrency,
-        currencies,
+        currencies: [baseCurrency],
         memo,
         status: "preparing",
         createdAt: new Date().toISOString(),
@@ -142,17 +181,28 @@ function createTrip() {
     renderHome();
 }
 
+/* -----------------------------
+   SIMPLE PAGES
+------------------------------ */
+
 function renderSimplePage(title, text) {
     tripTitle.textContent = getCurrentTripName(title);
     screen.innerHTML = `<section class="card"><h3>${title}</h3><p class="empty">${text}</p></section>`;
 }
 
+/* -----------------------------
+   SETTINGS
+------------------------------ */
+
 function renderSetting() {
     tripTitle.textContent = "설정";
+
     screen.innerHTML = `
         <section class="card">
             <h3>⚙ 설정</h3>
-            <button class="primary-button" onclick="resetCurrentTrip()">현재 여행 삭제</button>
+            <button class="primary-button" onclick="resetCurrentTrip()">
+                현재 여행 삭제
+            </button>
         </section>
     `;
 }
@@ -162,6 +212,10 @@ function resetCurrentTrip() {
     TripStore.deleteCurrentTrip();
     renderHome();
 }
+
+/* -----------------------------
+   NAVIGATION
+------------------------------ */
 
 const pages = {
     home: renderHome,
@@ -184,5 +238,9 @@ document.querySelectorAll(".nav-item").forEach(button => {
 document.getElementById("refreshButton").addEventListener("click", () => {
     location.reload();
 });
+
+/* -----------------------------
+   INIT
+------------------------------ */
 
 renderHome();
