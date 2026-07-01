@@ -174,3 +174,17 @@ label {
   text-align: left;
   width: 100%;
 }
+
+.checkbox-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 12px;
+    background: #f3f4f6;
+    border-radius: 14px;
+}
+
+.checkbox-list label {
+    margin: 0;
+    font-weight: 500;
+}
