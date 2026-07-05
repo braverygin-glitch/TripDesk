@@ -90,6 +90,15 @@ window.FirebaseService = {
         this.user = user || null;
       });
 
+      try {
+        const redirectResult = await authModule.getRedirectResult(this.auth);
+        if (redirectResult?.user) {
+          this.user = redirectResult.user;
+        }
+      } catch (redirectError) {
+        console.warn("Firebase redirect result failed", redirectError);
+      }
+
       this.connected = true;
       this.enabled = true;
       return true;
@@ -105,12 +114,16 @@ window.FirebaseService = {
 
     try {
       const provider = new this.modules.auth.GoogleAuthProvider();
-      const result = await this.modules.auth.signInWithPopup(this.auth, provider);
-      this.user = result.user;
-      return this.user;
+
+      // Popup login is often blocked on GitHub Pages, iPhone Safari, and PWA mode.
+      // Redirect login is more stable because it does not require a popup window.
+      await this.modules.auth.signInWithRedirect(this.auth, provider);
+      return null;
     } catch (error) {
       console.error("Firebase sign in failed", error);
-      throw new Error("Google 로그인에 실패했습니다. 팝업 차단 여부를 확인하세요.");
+      const code = error?.code ? ` (${error.code})` : "";
+      const message = error?.message ? `\n${error.message}` : "";
+      throw new Error(`Google 로그인에 실패했습니다${code}.${message}`);
     }
   },
 

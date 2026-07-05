@@ -77,7 +77,6 @@ window.MoreFeature = {
     try {
       await FirebaseService.signIn();
       App.render();
-      alert("Google 로그인이 완료되었습니다.");
     } catch (error) {
       alert(error.message || "Google 로그인 실패");
     }

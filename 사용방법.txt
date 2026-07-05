@@ -1,20 +1,15 @@
-TripDesk V1.0.10 사용방법
+TripDesk V1.0.10.1 사용방법
 
-이번 버전은 Firebase 동기화 준비/연결 버전입니다.
+이번 버전은 Firebase Google 로그인 팝업 차단 문제 수정 버전입니다.
 
-기본 사용:
-- Firebase 설정 없이도 기존처럼 로컬 저장으로 작동합니다.
-
-Firebase 사용:
-1. Firebase 프로젝트 생성
-2. 웹 앱 추가 후 firebaseConfig 복사
-3. TripDesk > 더보기 > Firebase 동기화 > 설정
-4. firebaseConfig JSON 붙여넣기
-5. 연결
-6. Google 로그인
-7. PC에서 현재 데이터 업로드
-8. 휴대폰에서 같은 계정으로 로그인
-9. 클라우드에서 불러오기 또는 실시간 동기화 시작
+사용:
+1. GitHub Pages 주소에서 실행
+   https://braverygin-glitch.github.io/TripDesk/
+2. 더보기
+3. Firebase 동기화
+4. Google 로그인
+5. Google 로그인 화면으로 이동
+6. 로그인 후 TripDesk로 돌아옴
 
 커밋 추천:
-feat: Firebase 동기화 기본 구조 추가
+fix: Firebase Google 로그인 리디렉션 방식으로 변경
