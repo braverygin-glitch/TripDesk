@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-0-3";
+const CACHE_NAME = "tripdesk-v1-0-7-1";
 const ASSETS = [
   "./",
   "./index.html",
@@ -15,6 +15,10 @@ const ASSETS = [
   "./js/integrations/excel-import-service.js",
   "./js/features/trips.js",
   "./js/features/home.js",
+  "./js/features/schedule.js",
+  "./js/features/bookings.js",
+  "./js/features/expenses.js",
+  "./js/features/checklist.js",
   "./js/features/more.js",
   "./js/app.js"
 ];

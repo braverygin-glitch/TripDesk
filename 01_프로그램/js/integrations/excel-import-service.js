@@ -45,6 +45,10 @@ window.ExcelImportService = {
       expenses: [],
       checklist: [],
       notes: "",
+      lastImport: {
+        filename,
+        importedAt: new Date().toISOString()
+      },
       schemaVersion: "1.0"
     };
 
@@ -79,9 +83,7 @@ window.ExcelImportService = {
           category: row.type || "예약",
           title: row.title,
           date: row.date || trip.startDate,
-          memo: [row.memo, row.reservationNo ? `예약번호: ${row.reservationNo}` : "", row.address ? `주소: ${row.address}` : ""]
-            .filter(Boolean)
-            .join("\n"),
+          memo: row.memo,
           reservationNo: row.reservationNo,
           address: row.address,
           pinned: confirmed

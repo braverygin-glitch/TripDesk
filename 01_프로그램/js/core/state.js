@@ -14,7 +14,9 @@ window.AppState = {
   },
 
   save() {
+    UI.setSaveStatus?.("● 저장 중...", "saving");
     DataService.saveTrips(this.trips);
+    window.setTimeout(() => UI.setSaveStatus?.("● 저장됨", "ok"), 180);
   },
 
   currentTrip() {

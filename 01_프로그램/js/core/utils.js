@@ -60,18 +60,57 @@ window.Utils = {
     const text = String(value ?? "").trim();
     if (!text) return "";
 
-    if (/^\d+(\.\d+)?$/.test(text)) {
-      const num = Number(text);
-      if (num > 0 && num < 1) {
-        const totalMinutes = Math.round(num * 24 * 60);
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
-        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-      }
+    // Excel numeric time, including scientific notation like 7.986111111111105E-2
+    const num = Number(text);
+    if (Number.isFinite(num) && num >= 0 && num < 1) {
+      const totalMinutes = Math.round(num * 24 * 60);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     }
 
-    const hm = text.match(/^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/);
-    if (hm) return `${hm[1].padStart(2, "0")}:${hm[2].padStart(2, "0")}`;
+    // HH:mm:ss
+    let match = text.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+    if (match) {
+      return `${match[1].padStart(2, "0")}:${match[2]}`;
+    }
+
+    // HH:mm
+    match = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      return `${match[1].padStart(2, "0")}:${match[2]}`;
+    }
+
+    // 1:55 AM / 1:55:00 AM
+    match = text.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+    if (match) {
+      let hour = parseInt(match[1], 10);
+      const minute = match[2];
+      const ampm = match[4].toUpperCase();
+
+      if (ampm === "AM") {
+        if (hour === 12) hour = 0;
+      } else {
+        if (hour !== 12) hour += 12;
+      }
+
+      return `${String(hour).padStart(2, "0")}:${minute}`;
+    }
+
+    // 오전 1:55 / 오후 3:30
+    match = text.match(/^(오전|오후)\s*(\d{1,2}):(\d{2})$/);
+    if (match) {
+      let hour = parseInt(match[2], 10);
+      const minute = match[3];
+
+      if (match[1] === "오전") {
+        if (hour === 12) hour = 0;
+      } else {
+        if (hour !== 12) hour += 12;
+      }
+
+      return `${String(hour).padStart(2, "0")}:${minute}`;
+    }
 
     return text;
   },
@@ -96,6 +135,10 @@ window.Utils = {
     trip.expenses ||= [];
     trip.checklist ||= [];
     trip.notes ||= "";
+    trip.lastImport ||= {
+      filename: "",
+      importedAt: ""
+    };
     trip.schemaVersion ||= "1.0";
     trip.updatedAt = new Date().toISOString();
 
@@ -139,6 +182,8 @@ window.Utils = {
     trip.checklist.forEach(item => {
       item.id ||= this.id("c");
       item.text ||= "";
+      item.category ||= "준비물";
+      item.memo ||= "";
       item.done = Boolean(item.done);
     });
 

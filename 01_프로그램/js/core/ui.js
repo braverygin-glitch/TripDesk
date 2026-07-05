@@ -20,6 +20,10 @@ window.UI = {
   nav() {
     const tabs = [
       ["home", "🏠", "홈"],
+      ["schedule", "📅", "일정"],
+      ["bookings", "📦", "예약"],
+      ["expenses", "💰", "경비"],
+      ["checklist", "✅", "체크"],
       ["trips", "🧳", "관리"],
       ["more", "☰", "더보기"]
     ];
@@ -38,9 +42,23 @@ window.UI = {
   shell(title, subtitle, content, rightHtml = "") {
     this.app().innerHTML = `
       ${this.topbar(title, subtitle, rightHtml)}
-      <main class="content">${content}</main>
+      <main class="content">
+        ${this.saveStatus()}
+        ${content}
+      </main>
       ${AppState.currentTrip() ? this.nav() : ""}
     `;
+  },
+
+  saveStatus() {
+    return `<div id="saveStatus" class="save-status">● 저장됨</div>`;
+  },
+
+  setSaveStatus(text, mode = "ok") {
+    const el = document.getElementById("saveStatus");
+    if (!el) return;
+    el.textContent = text;
+    el.className = `save-status ${mode}`;
   },
 
   modal(html) {

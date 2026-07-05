@@ -13,7 +13,7 @@ window.MoreFeature = {
 
       <section class="card">
         <div class="card-title">다음 단계</div>
-        <p class="small">V1.0.4에서 일정 추가/수정/삭제 화면을 구현합니다.</p>
+        <p class="small">V1.0.7에서 체크리스트 기능을 구현합니다. 사진/메모 기능은 최하위 우선순위로 보류합니다.</p>
       </section>
     `;
   }

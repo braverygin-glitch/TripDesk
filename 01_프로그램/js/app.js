@@ -29,6 +29,10 @@ window.App = {
 
     let content = "";
     if (AppState.currentTab === "home") content = HomeFeature.render(trip);
+    if (AppState.currentTab === "schedule") content = ScheduleFeature.render(trip);
+    if (AppState.currentTab === "bookings") content = BookingsFeature.render(trip);
+    if (AppState.currentTab === "expenses") content = ExpensesFeature.render(trip);
+    if (AppState.currentTab === "checklist") content = ChecklistFeature.render(trip);
     if (AppState.currentTab === "trips") content = TripsFeature.renderManagePage();
     if (AppState.currentTab === "more") content = MoreFeature.render(trip);
 
