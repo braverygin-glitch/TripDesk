@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## V1.0.8
+- GitHub Pages 배포용 프로젝트 구조로 정리
+- `01_프로그램` 내부 실행 파일을 저장소 최상위로 이동
+- `.gitignore` 추가
+- `02_여행데이터/` GitHub 제외 설정
+- `03_백업/` GitHub 제외 설정
+- `.nojekyll` 추가
+- PWA manifest 배포 경로 정리
+
 ## V1.0.7.1
 - 예약 카드 UI 정리
 - 예약번호 중복 표시 제거

@@ -1,0 +1,27 @@
+# TripDesk local-only data
+02_여행데이터/
+03_백업/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Python cache, if scripts are used later
+__pycache__/
+*.pyc
+
+# Firebase local files
+.firebase/
+firebase-debug.log
