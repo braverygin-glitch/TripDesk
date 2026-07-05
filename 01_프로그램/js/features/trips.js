@@ -7,12 +7,10 @@ window.TripsFeature = {
           <div class="trip-date">${Utils.formatDate(trip.startDate)} ~ ${Utils.formatDate(trip.endDate)} · ${Utils.escape(trip.travelers)}</div>
           <div class="small">${Utils.escape(trip.memo || "")}</div>
         </button>
-
         <div class="trip-actions">
-          <button class="trip-action-btn" onclick="TripsFeature.showEditForm('${trip.id}')">✏️ <span>수정</span></button>
-          <button class="trip-action-btn" onclick="TripsFeature.duplicate('${trip.id}')">📋 <span>복사</span></button>
-          <button class="trip-action-btn" onclick="TripsFeature.exportTrip('${trip.id}')">💾 <span>백업</span></button>
-          <button class="trip-action-btn danger" onclick="TripsFeature.remove('${trip.id}')">🗑️ <span>삭제</span></button>
+          <button class="btn ghost" onclick="TripsFeature.showEditForm('${trip.id}')">수정</button>
+          <button class="btn ghost" onclick="TripsFeature.duplicate('${trip.id}')">복사</button>
+          <button class="btn ghost" onclick="TripsFeature.exportTrip('${trip.id}')">백업</button>
         </div>
       </section>
     `).join("");
@@ -22,8 +20,8 @@ window.TripsFeature = {
       <main class="content">
         ${cards || UI.empty("저장된 여행이 없습니다.")}
         <div class="grid-2">
-          <button class="btn primary" onclick="TripsFeature.showCreateForm()">➕ 새 여행</button>
-          <button class="btn" onclick="TripsFeature.showImportChoice()">📂 가져오기</button>
+          <button class="btn primary" onclick="TripsFeature.showCreateForm()">+ 새 여행</button>
+          <button class="btn" onclick="TripsFeature.showImportChoice()">가져오기</button>
         </div>
         <input id="tripJsonImportFile" class="file-input" type="file" accept="application/json" onchange="TripsFeature.importJson(event)">
         <input id="tripExcelImportFile" class="file-input" type="file" accept=".xlsx,.csv" onchange="TripsFeature.importExcel(event)">
@@ -143,10 +141,6 @@ window.TripsFeature = {
       expenses: [],
       checklist: [],
       notes: "",
-      lastImport: {
-        filename: "",
-        importedAt: ""
-      },
       schemaVersion: "1.0"
     };
 
