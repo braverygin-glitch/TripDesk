@@ -12,6 +12,7 @@ window.MoreFeature = {
       <section class="card">
         <div class="card-title">Firebase 동기화</div>
         <p class="small">${FirebaseService.statusText()}</p>
+        <p class="small">자동 동기화: ${FirebaseService.isAutoSyncEnabled?.() ? "켜짐" : "꺼짐"}</p>
         <div class="grid-2">
           <button class="btn" onclick="MoreFeature.showFirebaseConfig()">설정</button>
           <button class="btn" onclick="MoreFeature.connectFirebase()">연결</button>
@@ -22,6 +23,8 @@ window.MoreFeature = {
         </div>
         <div style="height:8px"></div>
         <button class="btn primary full" onclick="MoreFeature.startRealtimeSync()">실시간 동기화 시작</button>
+        <div style="height:8px"></div>
+        <button class="btn full" onclick="MoreFeature.disableAutoSync()">자동 동기화 끄기</button>
         <p class="small">PC와 휴대폰에서 일정, 예약, 경비, 체크리스트를 수정할 수 있습니다.</p>
       </section>
 
@@ -194,7 +197,7 @@ window.MoreFeature = {
       FirebaseService.syncEnabled = true;
       await FirebaseService.overwriteTrips(AppState.trips);
       App.render();
-      alert("실시간 동기화를 시작했습니다.");
+      alert("실시간 동기화를 시작했습니다. 다음부터는 앱을 열 때 자동으로 연결을 시도합니다.");
     } catch (error) {
       alert(error.message || "실시간 동기화 시작 실패");
     }

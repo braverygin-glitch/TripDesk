@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-1-0-firebase-cleanup";
+const CACHE_NAME = "tripdesk-v1-2-0-auto-firebase-sync";
 const ASSETS = [
   "./",
   "./index.html",

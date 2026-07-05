@@ -4,7 +4,9 @@ window.FirebaseService = {
   syncEnabled: false,
   user: null,
   configKey: "tripdesk.firebase.config",
+  autoSyncKey: "tripdesk.firebase.autoSync",
   saveTimer: null,
+  autoStarted: false,
   unsubscribeTrips: null,
 
   modules: {
@@ -247,6 +249,7 @@ window.FirebaseService = {
 
     const { onSnapshot } = this.modules.firestore;
     this.syncEnabled = true;
+    this.enableAutoSync();
 
     this.unsubscribeTrips = onSnapshot(this.tripsCollectionRef(), snapshot => {
       const trips = [];
@@ -276,6 +279,47 @@ window.FirebaseService = {
 
     this.unsubscribeTrips = null;
     this.syncEnabled = false;
+  },
+
+  enableAutoSync() {
+    localStorage.setItem(this.autoSyncKey, "1");
+  },
+
+  disableAutoSync() {
+    localStorage.removeItem(this.autoSyncKey);
+    this.autoStarted = false;
+    this.stopRealtimeSync();
+  },
+
+  isAutoSyncEnabled() {
+    return localStorage.getItem(this.autoSyncKey) === "1";
+  },
+
+  async startAutoSyncIfPossible(onTripsChanged) {
+    if (this.autoStarted || !this.isAutoSyncEnabled() || !this.getConfig()) {
+      return false;
+    }
+
+    try {
+      await this.connect();
+
+      // Firebase Auth usually restores the previous Google login automatically.
+      await new Promise(resolve => window.setTimeout(resolve, 500));
+
+      if (!this.user) {
+        UI.setSaveStatus?.("● Firebase 로그인 필요", "warn");
+        return false;
+      }
+
+      this.startRealtimeSync(onTripsChanged);
+      this.autoStarted = true;
+      UI.setSaveStatus?.("● 자동 동기화 중", "ok");
+      return true;
+    } catch (error) {
+      console.warn("Auto Firebase sync failed", error);
+      UI.setSaveStatus?.("● 자동 동기화 실패", "warn");
+      return false;
+    }
   },
 
   statusText() {

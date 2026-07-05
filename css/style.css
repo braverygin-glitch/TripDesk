@@ -812,3 +812,10 @@ button { cursor: pointer; }
   white-space: normal;
   line-height: 1.25;
 }
+
+
+/* V1.2.0 auto sync */
+.sync-note {
+  font-size: 12px;
+  color: var(--muted);
+}

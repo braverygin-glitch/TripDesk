@@ -12,6 +12,15 @@ window.App = {
     }
 
     this.render();
+    this.startAutoFirebaseSync();
+  },
+
+  startAutoFirebaseSync() {
+    FirebaseService.startAutoSyncIfPossible?.(trips => {
+      AppState.replaceTripsFromCloud(trips);
+      this.render();
+      UI.setSaveStatus?.("● 클라우드에서 자동 갱신됨", "ok");
+    });
   },
 
   setTab(tab) {
