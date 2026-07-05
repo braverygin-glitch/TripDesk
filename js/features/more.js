@@ -9,25 +9,17 @@ window.MoreFeature = {
       <section class="card">
         <div class="card-title">Firebase 동기화</div>
         <p class="small">${FirebaseService.statusText()}</p>
-
         <div class="grid-2">
           <button class="btn" onclick="MoreFeature.showFirebaseConfig()">설정</button>
-          <button class="btn" onclick="MoreFeature.connectFirebase()">연결 확인</button>
+          <button class="btn" onclick="MoreFeature.connectFirebase()">연결</button>
           <button class="btn primary" onclick="MoreFeature.signInFirebase()">Google 로그인</button>
           <button class="btn" onclick="MoreFeature.signOutFirebase()">로그아웃</button>
           <button class="btn" onclick="MoreFeature.uploadToFirebase()">PC/현재 데이터 업로드</button>
           <button class="btn" onclick="MoreFeature.downloadFromFirebase()">클라우드에서 불러오기</button>
         </div>
-
         <div style="height:8px"></div>
         <button class="btn primary full" onclick="MoreFeature.startRealtimeSync()">실시간 동기화 시작</button>
-
         <p class="small">휴대폰에서도 일정, 예약, 경비, 체크리스트를 수정할 수 있습니다. 수정 내용은 Firebase를 통해 PC와 동기화됩니다.</p>
-      </section>
-
-      <section class="card">
-        <div class="card-title">사용 순서</div>
-        <p class="small">1. 설정 저장 → 2. 연결 확인 → 3. Google 로그인 → 4. PC/현재 데이터 업로드 → 5. 휴대폰에서 클라우드에서 불러오기 → 6. 실시간 동기화 시작</p>
       </section>
 
       <section class="card">
@@ -48,7 +40,7 @@ window.MoreFeature = {
 
     UI.modal(`
       <div class="modal-title">Firebase 설정</div>
-      <p class="small">Firebase Console의 웹 앱 설정(firebaseConfig)을 그대로 붙여넣으세요. const firebaseConfig = 부분은 빼고 중괄호만 붙여넣습니다.</p>
+      <p class="small">Firebase Console의 웹 앱 설정(firebaseConfig)을 그대로 붙여넣으세요.</p>
       <div class="field">
         <label>firebaseConfig JSON</label>
         <textarea id="firebaseConfigText" style="min-height:220px" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'>${Utils.escape(value)}</textarea>
@@ -75,7 +67,7 @@ window.MoreFeature = {
     try {
       await FirebaseService.connect();
       App.render();
-      alert(FirebaseService.isSignedIn() ? "Firebase 연결 및 로그인 상태 확인 완료" : "Firebase 연결 완료. Google 로그인을 진행하세요.");
+      alert("Firebase 연결이 완료되었습니다.");
     } catch (error) {
       alert(error.message || "Firebase 연결 실패");
     }
@@ -102,20 +94,9 @@ window.MoreFeature = {
 
   async uploadToFirebase() {
     try {
-      if (!FirebaseService.getConfig()) {
-        alert("Firebase 설정을 먼저 저장하세요.");
-        return;
-      }
-
-      await FirebaseService.connect();
-
-      if (!FirebaseService.isSignedIn()) {
-        alert("Google 로그인을 먼저 완료하세요.");
-        return;
-      }
-
       if (!confirm("현재 로컬 여행 데이터를 Firebase에 업로드할까요?")) return;
-
+      await FirebaseService.connect();
+      if (!FirebaseService.isSignedIn()) await FirebaseService.signIn();
       await FirebaseService.uploadTrips(AppState.trips);
       App.render();
       alert("Firebase 업로드가 완료되었습니다.");
@@ -126,19 +107,9 @@ window.MoreFeature = {
 
   async downloadFromFirebase() {
     try {
-      if (!FirebaseService.getConfig()) {
-        alert("Firebase 설정을 먼저 저장하세요.");
-        return;
-      }
-
-      await FirebaseService.connect();
-
-      if (!FirebaseService.isSignedIn()) {
-        alert("Google 로그인을 먼저 완료하세요.");
-        return;
-      }
-
       if (!confirm("Firebase 데이터를 이 기기로 불러올까요? 현재 로컬 데이터는 클라우드 데이터로 교체됩니다.")) return;
+      await FirebaseService.connect();
+      if (!FirebaseService.isSignedIn()) await FirebaseService.signIn();
 
       const trips = await FirebaseService.downloadTrips();
       if (!trips.length) {
@@ -156,24 +127,16 @@ window.MoreFeature = {
 
   async startRealtimeSync() {
     try {
-      if (!FirebaseService.getConfig()) {
-        alert("Firebase 설정을 먼저 저장하세요.");
-        return;
-      }
-
       await FirebaseService.connect();
+      if (!FirebaseService.isSignedIn()) await FirebaseService.signIn();
 
-      if (!FirebaseService.isSignedIn()) {
-        alert("Google 로그인을 먼저 완료하세요.");
-        return;
-      }
-
-      await FirebaseService.startRealtimeSync(trips => {
+      FirebaseService.startRealtimeSync(trips => {
         AppState.replaceTripsFromCloud(trips);
         App.render();
         UI.setSaveStatus?.("● 클라우드에서 갱신됨", "ok");
       });
 
+      FirebaseService.syncEnabled = true;
       await FirebaseService.uploadTrips(AppState.trips);
       App.render();
       alert("실시간 동기화를 시작했습니다.");

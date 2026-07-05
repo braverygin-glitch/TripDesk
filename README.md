@@ -3,32 +3,27 @@
 개인용 여행 관리 PWA 프로젝트입니다.
 
 ## 현재 버전
-V1.0.10.2 Firebase Auth Flow Fix
+V1.0.10.2 Mobile First Firebase Import
 
 ## 이번 패치
-Firebase Redirect 로그인 흐름을 안정화했습니다.
-
-- 앱 시작 시 Firebase 로그인 상태 자동 확인
-- Redirect 로그인 후 TripDesk로 돌아왔을 때 로그인 상태 복구
-- 업로드/다운로드/실시간 동기화는 로그인 완료 후에만 실행
-- 모바일 Safari/PWA에서 로그인 흐름 안정화
-- 오류 메시지 개선
+- 여행 목록 화면에도 Firebase 동기화 카드 추가
+- 여행이 하나도 없는 휴대폰에서도 Firebase 설정/연결/Google 로그인/클라우드 불러오기 가능
+- PC에서 업로드한 여행 데이터를 모바일 첫 화면에서 바로 불러올 수 있음
 
 ## 사용 순서
-1. 더보기
-2. Firebase 동기화
-3. 설정 저장
-4. 연결 확인
-5. Google 로그인
-6. PC/현재 데이터 업로드
-7. 휴대폰에서 같은 Google 계정 로그인
-8. 클라우드에서 불러오기
-9. 실시간 동기화 시작
 
-## 주소
-```text
-https://braverygin-glitch.github.io/TripDesk/
-```
+### PC
+1. TripDesk 접속
+2. 더보기
+3. Firebase 동기화
+4. PC/현재 데이터 업로드
+
+### 휴대폰
+1. `https://braverygin-glitch.github.io/TripDesk/` 접속
+2. 첫 화면의 Firebase 동기화 카드 사용
+3. 설정/연결/Google 로그인
+4. 클라우드에서 불러오기
 
 ## 주의
-Firebase 로그인은 `file://` 로컬 파일 실행에서는 동작하지 않습니다.
+Firebase 로그인은 `file://` 로컬 실행에서는 동작하지 않습니다.
+반드시 GitHub Pages 주소에서 실행하세요.

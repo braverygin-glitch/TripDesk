@@ -3,7 +3,6 @@ window.FirebaseService = {
   connected: false,
   syncEnabled: false,
   user: null,
-  authChecked: false,
   configKey: "tripdesk.firebase.config",
   saveTimer: null,
   unsubscribeTrips: null,
@@ -56,12 +55,10 @@ window.FirebaseService = {
   },
 
   clearConfig() {
-    this.stopRealtimeSync();
     localStorage.removeItem(this.configKey);
     this.enabled = false;
     this.connected = false;
     this.user = null;
-    this.authChecked = false;
   },
 
   async connect() {
@@ -89,69 +86,37 @@ window.FirebaseService = {
       this.auth = authModule.getAuth(this.firebaseApp);
       this.db = firestoreModule.getFirestore(this.firebaseApp);
 
+      authModule.onAuthStateChanged(this.auth, user => {
+        this.user = user || null;
+      });
+
+      try {
+        const redirectResult = await authModule.getRedirectResult(this.auth);
+        if (redirectResult?.user) {
+          this.user = redirectResult.user;
+        }
+      } catch (redirectError) {
+        console.warn("Firebase redirect result failed", redirectError);
+      }
+
       this.connected = true;
       this.enabled = true;
-
-      await this.resolveAuthState();
-
       return true;
     } catch (error) {
       console.error("Firebase connect failed", error);
       this.connected = false;
-      const code = error?.code ? ` (${error.code})` : "";
-      const message = error?.message ? `\n${error.message}` : "";
-      throw new Error(`Firebase 연결에 실패했습니다${code}.${message}`);
+      throw new Error("Firebase 연결에 실패했습니다. 설정값과 인터넷 연결을 확인하세요.");
     }
-  },
-
-  async resolveAuthState() {
-    if (!this.auth || !this.modules.auth) return null;
-
-    try {
-      const redirectResult = await this.modules.auth.getRedirectResult(this.auth);
-      if (redirectResult?.user) {
-        this.user = redirectResult.user;
-      }
-    } catch (error) {
-      console.warn("Firebase redirect result failed", error);
-    }
-
-    await new Promise(resolve => {
-      const unsubscribe = this.modules.auth.onAuthStateChanged(this.auth, user => {
-        this.user = user || null;
-        this.authChecked = true;
-        unsubscribe();
-        resolve(this.user);
-      });
-    });
-
-    return this.user;
-  },
-
-  async ensureConnected() {
-    await this.connect();
-    return true;
-  },
-
-  async ensureSignedIn() {
-    await this.connect();
-
-    if (this.user) {
-      return this.user;
-    }
-
-    throw new Error("Firebase 로그인이 필요합니다. 먼저 Google 로그인을 눌러 로그인하세요.");
   },
 
   async signIn() {
     await this.connect();
 
-    if (this.user) {
-      return this.user;
-    }
-
     try {
       const provider = new this.modules.auth.GoogleAuthProvider();
+
+      // Popup login is often blocked on GitHub Pages, iPhone Safari, and PWA mode.
+      // Redirect login is more stable because it does not require a popup window.
       await this.modules.auth.signInWithRedirect(this.auth, provider);
       return null;
     } catch (error) {
@@ -167,7 +132,6 @@ window.FirebaseService = {
     this.stopRealtimeSync();
     await this.modules.auth.signOut(this.auth);
     this.user = null;
-    this.authChecked = true;
   },
 
   isReady() {
@@ -203,15 +167,16 @@ window.FirebaseService = {
     const snapshot = Utils.clone(trips);
 
     this.saveTimer = window.setTimeout(() => {
-      this.uploadTrips(snapshot, { silent: true }).catch(error => {
+      this.uploadTrips(snapshot).catch(error => {
         console.warn("Firebase background sync failed", error);
         UI.setSaveStatus?.("● 로컬 저장됨 · 동기화 실패", "warn");
       });
     }, 700);
   },
 
-  async uploadTrips(trips, options = {}) {
-    await this.ensureSignedIn();
+  async uploadTrips(trips) {
+    await this.connect();
+    if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
 
     const { setDoc, serverTimestamp } = this.modules.firestore;
 
@@ -224,15 +189,13 @@ window.FirebaseService = {
       }, { merge: true });
     }
 
-    if (!options.silent) {
-      UI.setSaveStatus?.("● 클라우드 동기화됨", "ok");
-    }
-
+    UI.setSaveStatus?.("● 클라우드 동기화됨", "ok");
     return true;
   },
 
   async downloadTrips() {
-    await this.ensureSignedIn();
+    await this.connect();
+    if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
 
     const { getDocs } = this.modules.firestore;
     const snapshot = await getDocs(this.tripsCollectionRef());
@@ -248,8 +211,10 @@ window.FirebaseService = {
     return trips;
   },
 
-  async startRealtimeSync(onTripsChanged) {
-    await this.ensureSignedIn();
+  startRealtimeSync(onTripsChanged) {
+    if (!this.isReady() || !this.user) {
+      throw new Error("Firebase 로그인이 필요합니다.");
+    }
 
     this.stopRealtimeSync();
 
@@ -289,7 +254,6 @@ window.FirebaseService = {
   statusText() {
     if (!this.getConfig()) return "Firebase 설정 없음";
     if (!this.connected) return "Firebase 설정 있음 · 연결 전";
-    if (!this.authChecked) return "Firebase 연결됨 · 로그인 확인 중";
     if (!this.user) return "Firebase 연결됨 · 로그인 전";
     if (this.syncEnabled) return `실시간 동기화 중 · ${this.user.email}`;
     return `로그인됨 · ${this.user.email}`;

@@ -1,11 +1,9 @@
 # CHANGELOG
 
 ## V1.0.10.2
-- Firebase Redirect 로그인 흐름 수정
-- 앱 시작 시 로그인 상태 자동 확인 추가
-- Redirect 로그인 후 상태 복구 추가
-- 업로드/다운로드/실시간 동기화에서 로그인 흐름 분리
-- 모바일 Safari/PWA 로그인 안정화
+- 여행 목록 화면에 Firebase 동기화 카드 추가
+- 모바일 첫 실행 시 여행이 없어도 클라우드에서 불러오기 가능
+- Firebase 설정/연결/Google 로그인/클라우드 불러오기를 목록 화면에서도 사용 가능
 
 ## V1.0.10.1
 - Google 로그인 방식을 signInWithPopup에서 signInWithRedirect로 변경

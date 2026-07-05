@@ -782,3 +782,17 @@ button { cursor: pointer; }
     grid-template-columns: none !important;
   }
 }
+
+
+/* V1.0.10.2 mobile first Firebase import */
+.firebase-first-card {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+.firebase-first-card .grid-2 {
+  margin-top: 10px;
+}
+
+.firebase-first-card .btn {
+  min-height: 42px;
+}
