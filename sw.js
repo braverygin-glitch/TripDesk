@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-0-10-1-redirect-login";
+const CACHE_NAME = "tripdesk-v1-0-10-2-auth-flow";
 const ASSETS = [
   "./",
   "./index.html",

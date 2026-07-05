@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## V1.0.10.2
+- Firebase Redirect 로그인 흐름 수정
+- 앱 시작 시 로그인 상태 자동 확인 추가
+- Redirect 로그인 후 상태 복구 추가
+- 업로드/다운로드/실시간 동기화에서 로그인 흐름 분리
+- 모바일 Safari/PWA 로그인 안정화
+
 ## V1.0.10.1
 - Google 로그인 방식을 signInWithPopup에서 signInWithRedirect로 변경
 - GitHub Pages 및 모바일 브라우저의 팝업 차단 문제 완화
