@@ -2,6 +2,12 @@ window.HomeFeature = {
   render(trip) {
     const today = Utils.today();
 
+    trip.schedule = trip.schedule || [];
+    trip.bookings = trip.bookings || [];
+    trip.expenses = trip.expenses || [];
+
+    trip.expenses = trip.expenses || [];
+
     const todaySchedule = trip.schedule
       .filter(item => item.date === today)
       .sort(Utils.sortSchedule);
@@ -12,6 +18,12 @@ window.HomeFeature = {
 
     const todayExpenses = trip.expenses.filter(item => item.date === today);
     const todayExpenseTotals = this.sumExpensesByCurrency(todayExpenses);
+
+    const preExpenses = trip.expenses.filter(item => (item.expenseType || "trip") === "pre");
+    const tripOnlyExpenses = trip.expenses.filter(item => (item.expenseType || "trip") === "trip");
+    const preTotals = this.sumExpensesByCurrency(preExpenses);
+    const tripTotals = this.sumExpensesByCurrency(tripOnlyExpenses);
+    const allTotals = this.sumExpensesByCurrency(trip.expenses);
 
     const pinnedSchedule = trip.schedule
       .filter(item => item.pinned)
@@ -40,6 +52,29 @@ window.HomeFeature = {
         ${Object.keys(todayExpenseTotals).length ? Object.keys(todayExpenseTotals).map(currency => `
           <div class="home-total">${Utils.escape(currency)} ${this.formatAmount(todayExpenseTotals[currency])}</div>
         `).join("") : UI.empty("오늘 입력된 경비가 없습니다.")}
+      </section>
+
+      <section class="card">
+        <div class="card-title">💳 여행 경비 요약</div>
+
+        <div class="small"><b>여행 전</b></div>
+        ${Object.keys(preTotals).length ? Object.keys(preTotals).map(currency => `
+          <div class="home-total">${Utils.escape(currency)} ${this.formatAmount(preTotals[currency])}</div>
+        `).join("") : UI.empty("없음")}
+
+        <div style="height:8px"></div>
+
+        <div class="small"><b>여행 중</b></div>
+        ${Object.keys(tripTotals).length ? Object.keys(tripTotals).map(currency => `
+          <div class="home-total">${Utils.escape(currency)} ${this.formatAmount(tripTotals[currency])}</div>
+        `).join("") : UI.empty("없음")}
+
+        <div style="height:8px"></div>
+
+        <div class="small"><b>총 지출</b></div>
+        ${Object.keys(allTotals).length ? Object.keys(allTotals).map(currency => `
+          <div class="home-total">${Utils.escape(currency)} ${this.formatAmount(allTotals[currency])}</div>
+        `).join("") : UI.empty("없음")}
       </section>
 
       <section class="card">
@@ -83,10 +118,9 @@ window.HomeFeature = {
   bookingItemHtml(item) {
     return `
       <div class="item">
-        <div class="item-time">📅 ${Utils.formatDate(item.date)} · ${Utils.escape(item.category || "기타")}</div>
+        <div class="item-time">${Utils.formatDate(item.date)} · ${Utils.escape(item.category || "기타")}</div>
         <div class="item-title">${Utils.escape(item.title)}</div>
-        ${item.reservationNo ? `<div class="item-meta">🎫 ${Utils.escape(item.reservationNo)}</div>` : ""}
-        ${item.address ? `<div class="item-meta">📍 ${Utils.escape(item.address)}</div>` : ""}
+        ${item.reservationNo ? `<div class="item-meta">예약번호: ${Utils.escape(item.reservationNo)}</div>` : ""}
       </div>
     `;
   },
@@ -107,7 +141,7 @@ window.HomeFeature = {
   },
 
   sumExpensesByCurrency(items) {
-    return items.reduce((acc, item) => {
+    return (items || []).reduce((acc, item) => {
       const currency = item.currency || "EUR";
       acc[currency] = (acc[currency] || 0) + Number(item.amount || 0);
       return acc;

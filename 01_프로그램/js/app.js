@@ -12,6 +12,28 @@ window.App = {
     }
 
     this.render();
+    this.handleFirebaseRedirectOnLoad();
+    this.startAutoFirebaseSync();
+  },
+
+  async handleFirebaseRedirectOnLoad() {
+    try {
+      const signedIn = await FirebaseService.handleRedirectOnLoad?.();
+      if (signedIn) {
+        this.render();
+        UI.setSaveStatus?.("● Firebase 로그인됨", "ok");
+      }
+    } catch (error) {
+      console.warn("Firebase redirect login handling failed", error);
+    }
+  },
+
+  startAutoFirebaseSync() {
+    FirebaseService.startAutoSyncIfPossible?.(trips => {
+      AppState.replaceTripsFromCloud(trips);
+      this.render();
+      UI.setSaveStatus?.("● 클라우드에서 자동 갱신됨", "ok");
+    });
   },
 
   setTab(tab) {

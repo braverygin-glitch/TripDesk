@@ -275,24 +275,6 @@ button { cursor: pointer; }
 .status-ok { color: var(--success); font-weight: 900; }
 .status-warn { color: var(--warning); font-weight: 900; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f172a;
-    --surface: #111827;
-    --text: #f9fafb;
-    --muted: #9ca3af;
-    --line: #374151;
-  }
-
-  html, body { background: #020617; }
-  .bottom-nav, .modal, .trip-card, .field input, .field textarea, .field select {
-    background: #111827;
-    color: var(--text);
-  }
-  .bottom-nav { background: rgba(17,24,39,0.95); }
-  .btn { background: #374151; color: white; }
-}
-
 .item-time {
   color: var(--primary-dark);
   font-size: 13px;
@@ -311,7 +293,10 @@ button { cursor: pointer; }
   font-size: 13px;
 }
 
-.schedule-main {
+.schedule-main,
+.booking-main,
+.expense-main,
+.check-main {
   flex: 1;
   min-width: 0;
   text-align: left;
@@ -321,7 +306,8 @@ button { cursor: pointer; }
   color: inherit;
 }
 
-.schedule-actions {
+.schedule-actions,
+.booking-actions {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -363,38 +349,41 @@ button { cursor: pointer; }
   font-weight: 850;
 }
 
-@media (prefers-color-scheme: dark) {
-  .icon-btn,
-  .check-row {
-    background: #1f2937;
-  }
-}
-
-.booking-main {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: inherit;
-}
-
-.booking-actions {
-  display: flex;
+.check-progress {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
 }
 
-.expense-main {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
+.check-toggle {
   border: 0;
   background: transparent;
-  padding: 0;
-  color: inherit;
+  font-size: 24px;
+  min-width: 34px;
+}
+
+/* Expenses */
+.expense-item .row-between {
+  align-items: flex-start;
+}
+
+.expense-item .row {
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+
+.expense-item .btn {
+  min-height: 34px;
+  padding: 7px 9px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 .expense-total {
@@ -423,6 +412,31 @@ button { cursor: pointer; }
   text-align: right;
 }
 
+.quick-expense-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quick-expense-grid .btn,
+.grid-2 .btn {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+/* Home */
+.home-total {
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  margin: 6px 0;
+}
+
+/* Save status */
 .save-status {
   display: inline-flex;
   align-items: center;
@@ -445,71 +459,7 @@ button { cursor: pointer; }
   color: #c2410c;
 }
 
-@media (max-width: 390px) {
-  .bottom-nav {
-    grid-template-columns: repeat(7, 1fr);
-  }
-
-  .nav-btn {
-    font-size: 10px;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .nav-btn span {
-    font-size: 18px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .save-status {
-    background: #064e3b;
-    color: #d1fae5;
-  }
-
-  .save-status.saving {
-    background: #1e3a8a;
-    color: #dbeafe;
-  }
-}
-
-.home-total {
-  font-size: 22px;
-  font-weight: 950;
-  letter-spacing: -0.03em;
-  margin: 6px 0;
-}
-
-.check-progress {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 850;
-}
-
-.check-toggle {
-  border: 0;
-  background: transparent;
-  font-size: 24px;
-  min-width: 34px;
-}
-
-.check-main {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: inherit;
-}
-
+/* Mobile */
 @media (max-width: 430px) {
   .bottom-nav {
     grid-template-columns: repeat(7, 1fr);
@@ -524,298 +474,205 @@ button { cursor: pointer; }
   .nav-btn span {
     font-size: 17px;
   }
-}
 
-@media (prefers-color-scheme: dark) {
-  .check-progress {
-    background: #1f2937;
+  .expense-item .row-between {
+    gap: 10px;
+  }
+
+  .expense-item .row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .expense-item .btn {
+    min-width: 48px;
   }
 }
 
-.booking-item .item-meta {
-  line-height: 1.45;
+@media (max-width: 390px) {
+  .nav-btn {
+    font-size: 10px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .nav-btn span {
+    font-size: 18px;
+  }
 }
 
-.booking-item .item-title {
-  margin-bottom: 4px;
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --surface: #111827;
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --line: #374151;
+  }
+
+  html, body { background: #020617; }
+
+  .bottom-nav,
+  .modal,
+  .trip-card,
+  .field input,
+  .field textarea,
+  .field select {
+    background: #111827;
+    color: var(--text);
+  }
+
+  .bottom-nav { background: rgba(17,24,39,0.95); }
+  .btn { background: #374151; color: white; }
+  .btn.primary { background: var(--primary); color: white; }
+  .btn.danger { background: #7f1d1d; color: #fecaca; }
+  .btn.ghost { background: transparent; border-color: var(--line); }
+
+  .icon-btn,
+  .check-row,
+  .check-progress {
+    background: #1f2937;
+  }
+
+  .save-status {
+    background: #064e3b;
+    color: #d1fae5;
+  }
+
+  .save-status.saving {
+    background: #1e3a8a;
+    color: #dbeafe;
+  }
+
+  .save-status.warn {
+    background: #7c2d12;
+    color: #fed7aa;
+  }
 }
 
-
-/* V1.0.9 Mobile UI stabilization */
-.app {
-  max-width: 560px;
-}
-
-.topbar {
-  padding: 16px 16px 20px;
-}
-
-.top-title {
-  font-size: 25px;
-}
-
-.content {
-  padding: 12px;
-}
-
-.card {
-  padding: 14px;
-  margin-bottom: 11px;
-}
-
-.trip-card {
-  padding: 14px;
-  margin-bottom: 10px;
-}
-
-.trip-name {
-  font-size: 20px;
-  letter-spacing: -0.03em;
-}
-
-.trip-date {
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.trip-actions {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
-  margin-top: 12px;
-}
-
-.btn.compact {
-  min-height: 38px;
-  padding: 8px 4px;
-  font-size: 13px;
-  white-space: nowrap;
-  border-radius: 13px;
-}
-
-.danger-text {
-  color: var(--danger) !important;
-}
-
-.grid-2 .btn {
-  min-height: 44px;
-}
-
-.item {
-  padding: 10px 0;
-}
-
-.item-title {
-  line-height: 1.35;
-}
-
-.item-meta {
-  line-height: 1.45;
-}
-
-.badge {
-  font-size: 11.5px;
-  padding: 3px 7px;
-}
-
-.bottom-nav {
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.nav-btn {
-  font-size: 9.5px;
-  padding: 7px 0 6px;
-}
-
-.nav-btn span {
-  font-size: 17px;
-}
-
-.schedule-actions,
-.booking-actions {
+/* V1.3.2 expense update */
+.expense-action-row {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-.icon-btn,
-.pin-btn {
-  min-width: 36px;
-  min-height: 36px;
+.expense-item .row-between {
+  align-items: flex-start;
 }
 
-.save-status {
-  margin-bottom: 9px;
+.expense-item .row {
+  flex-shrink: 0;
+  align-items: flex-start;
 }
 
-@media (max-width: 430px) {
-  .content {
-    padding: 11px;
-  }
-
-  .topbar {
-    border-bottom-left-radius: 24px;
-    border-bottom-right-radius: 24px;
-  }
-
-  .card,
-  .trip-card {
-    border-radius: 20px;
-  }
-
-  .trip-actions {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .btn.compact {
-    min-height: 38px;
-    font-size: 12.5px;
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-
-  .grid-2 {
-    gap: 7px;
-  }
-
-  .bottom-nav {
-    grid-template-columns: repeat(7, 1fr);
-  }
-
-  .nav-btn {
-    font-size: 9px;
-  }
-
-  .nav-btn span {
-    font-size: 16px;
-  }
+.expense-item .btn {
+  min-height: 34px;
+  padding: 7px 9px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
-@media (max-width: 360px) {
-  .btn.compact {
-    font-size: 0;
-  }
-
-  .btn.compact::first-letter {
-    font-size: 16px;
-  }
-
-  .trip-actions .btn.compact {
-    font-size: 0;
-  }
-
-  .trip-actions .btn.compact:nth-child(1)::after { content: "✏"; font-size: 17px; }
-  .trip-actions .btn.compact:nth-child(2)::after { content: "📋"; font-size: 17px; }
-  .trip-actions .btn.compact:nth-child(3)::after { content: "💾"; font-size: 17px; }
-  .trip-actions .btn.compact:nth-child(4)::after { content: "🗑"; font-size: 17px; }
+.quick-expense-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-
-/* V1.0.9.1 FINAL MOBILE BUTTON FIX */
-.trip-actions {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  gap: 6px !important;
-  width: 100% !important;
-  margin-top: 12px !important;
-}
-
-.trip-action-btn {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-  height: 40px !important;
-  min-height: 40px !important;
-  padding: 0 4px !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 13px !important;
-  background: transparent !important;
-  color: var(--text) !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
-  word-break: keep-all !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 2px !important;
-}
-
-.trip-action-btn span {
-  display: inline !important;
-  white-space: nowrap !important;
-  word-break: keep-all !important;
-}
-
-.trip-action-btn.danger {
-  color: var(--danger) !important;
-}
-
-.trip-card {
-  padding: 14px !important;
-}
-
-.trip-card-inner {
-  margin-bottom: 0 !important;
-}
-
-@media (max-width: 380px) {
-  .trip-action-btn {
-    font-size: 0 !important;
-    gap: 0 !important;
-  }
-
-  .trip-action-btn span {
-    display: none !important;
-  }
-
-  .trip-action-btn {
-    font-size: 18px !important;
-  }
-}
-
-@media (max-width: 430px) {
-  .trip-actions {
-    grid-template-columns: none !important;
-  }
-}
-
-
-/* V1.0.10.2 mobile first Firebase import */
-.firebase-first-card {
-  border: 1px solid rgba(37, 99, 235, 0.16);
-}
-
-.firebase-first-card .grid-2 {
-  margin-top: 10px;
-}
-
-.firebase-first-card .btn {
-  min-height: 42px;
-}
-
-
-/* V1.1.0 Firebase cleanup */
-.danger-zone {
-  border: 1px solid rgba(220, 38, 38, 0.18);
-}
-
-.danger-zone .card-title {
-  color: var(--danger);
-}
-
-.danger-zone .btn {
-  min-height: 44px;
+.quick-expense-grid .btn,
+.grid-2 .btn {
   white-space: normal;
   line-height: 1.25;
 }
 
-
-/* V1.2.0 auto sync */
-.sync-note {
-  font-size: 12px;
-  color: var(--muted);
+.danger-text {
+  color: var(--danger);
 }
+
+@media (max-width: 430px) {
+  .expense-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .expense-action-row .btn {
+    flex: 1;
+  }
+
+  .expense-item .row-between {
+    gap: 10px;
+  }
+
+  .expense-item .row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .expense-item .btn {
+    min-width: 48px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn.danger {
+    background: #7f1d1d;
+    color: #fecaca;
+  }
+}
+
+/* V1.3.2 Stable expense UI */
+.expense-action-row {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.expense-item .row-between {
+  align-items: flex-start;
+}
+
+.expense-item-actions {
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+
+.expense-main .item-title,
+.expense-main .item-meta {
+  overflow-wrap: anywhere;
+}
+
+.quick-expense-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quick-expense-grid .btn,
+.grid-2 .btn {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+@media (max-width: 430px) {
+  .expense-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .expense-action-row .btn {
+    flex: 1;
+  }
+
+  .expense-item .row-between {
+    gap: 10px;
+  }
+
+  .expense-item-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .expense-item .btn {
+    min-width: 48px;
+  }
+}
+

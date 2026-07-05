@@ -1,0 +1,20 @@
+TripDesk V1.3.2 Expense Update
+
+수정 내용:
+- 여행 전 / 여행 중 경비 구분
+- 여행 전 경비 빠른 입력 개선
+- 빠른 입력에서 금액 검증 추가
+- 경비 수정/삭제 유지
+- 여행 전/여행 중/총 지출 합계 표시
+- 홈 화면 경비 요약 추가
+- CSS 보강
+- 기존 경비는 자동으로 여행 중(trip)으로 처리
+
+교체/수정 파일:
+- js/features/expenses.js
+- js/features/home.js
+- css/style.css
+- sw.js 캐시명 갱신
+
+커밋 메시지 추천:
+feat(expense): add pre-trip expense tracking and quick input

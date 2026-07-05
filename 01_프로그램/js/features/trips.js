@@ -7,10 +7,12 @@ window.TripsFeature = {
           <div class="trip-date">${Utils.formatDate(trip.startDate)} ~ ${Utils.formatDate(trip.endDate)} · ${Utils.escape(trip.travelers)}</div>
           <div class="small">${Utils.escape(trip.memo || "")}</div>
         </button>
+
         <div class="trip-actions">
-          <button class="btn ghost" onclick="TripsFeature.showEditForm('${trip.id}')">수정</button>
-          <button class="btn ghost" onclick="TripsFeature.duplicate('${trip.id}')">복사</button>
-          <button class="btn ghost" onclick="TripsFeature.exportTrip('${trip.id}')">백업</button>
+          <button class="trip-action-btn" onclick="TripsFeature.showEditForm('${trip.id}')">✏️ <span>수정</span></button>
+          <button class="trip-action-btn" onclick="TripsFeature.duplicate('${trip.id}')">📋 <span>복사</span></button>
+          <button class="trip-action-btn" onclick="TripsFeature.exportTrip('${trip.id}')">💾 <span>백업</span></button>
+          <button class="trip-action-btn danger" onclick="TripsFeature.remove('${trip.id}')">🗑️ <span>삭제</span></button>
         </div>
       </section>
     `).join("");
@@ -19,9 +21,20 @@ window.TripsFeature = {
       ${UI.topbar("TripDesk", "여행을 선택하거나 새 여행을 만드세요.")}
       <main class="content">
         ${cards || UI.empty("저장된 여행이 없습니다.")}
+
+        <section class="card firebase-first-card">
+          <div class="card-title">Firebase 동기화</div>
+          <p class="small">${FirebaseService.statusText ? FirebaseService.statusText() : "Firebase 준비됨"}</p>
+          <p class="small">PC에서 업로드한 여행 데이터를 휴대폰으로 불러올 수 있습니다.</p>
+          <div class="grid-2">
+            <button class="btn primary" onclick="TripsFeature.signInFirebaseFromList()">Google 로그인</button>
+            <button class="btn" onclick="TripsFeature.downloadFromFirebaseFromList()">클라우드에서 불러오기</button>
+          </div>
+        </section>
+
         <div class="grid-2">
-          <button class="btn primary" onclick="TripsFeature.showCreateForm()">+ 새 여행</button>
-          <button class="btn" onclick="TripsFeature.showImportChoice()">가져오기</button>
+          <button class="btn primary" onclick="TripsFeature.showCreateForm()">➕ 새 여행</button>
+          <button class="btn" onclick="TripsFeature.showImportChoice()">📂 가져오기</button>
         </div>
         <input id="tripJsonImportFile" class="file-input" type="file" accept="application/json" onchange="TripsFeature.importJson(event)">
         <input id="tripExcelImportFile" class="file-input" type="file" accept=".xlsx,.csv" onchange="TripsFeature.importExcel(event)">
@@ -141,6 +154,10 @@ window.TripsFeature = {
       expenses: [],
       checklist: [],
       notes: "",
+      lastImport: {
+        filename: "",
+        importedAt: ""
+      },
       schemaVersion: "1.0"
     };
 
@@ -224,4 +241,77 @@ window.TripsFeature = {
       event.target.value = "";
     }
   }
+,
+  showFirebaseConfigFromList() {
+    const existing = FirebaseService.getConfig?.();
+    const value = existing ? JSON.stringify(existing, null, 2) : "";
+
+    UI.modal(`
+      <div class="modal-title">Firebase 설정</div>
+      <p class="small">Firebase Console의 웹 앱 설정(firebaseConfig)을 그대로 붙여넣으세요.</p>
+      <div class="field">
+        <label>firebaseConfig JSON</label>
+        <textarea id="firebaseConfigText" style="min-height:220px" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'>${Utils.escape(value)}</textarea>
+      </div>
+      <div class="grid-2">
+        <button class="btn" onclick="UI.closeModal()">취소</button>
+        <button class="btn primary" onclick="TripsFeature.saveFirebaseConfigFromList()">저장</button>
+      </div>
+    `);
+  },
+
+  saveFirebaseConfigFromList() {
+    try {
+      FirebaseService.saveConfig(Utils.value("firebaseConfigText"));
+      UI.closeModal();
+      this.renderList();
+      alert("Firebase 설정을 저장했습니다.");
+    } catch (error) {
+      alert(error.message || "Firebase 설정 저장에 실패했습니다.");
+    }
+  },
+
+  async connectFirebaseFromList() {
+    try {
+      await FirebaseService.connect();
+      this.renderList();
+      alert("Firebase 연결이 완료되었습니다.");
+    } catch (error) {
+      alert(error.message || "Firebase 연결 실패");
+    }
+  },
+
+  async signInFirebaseFromList() {
+    try {
+      const user = await FirebaseService.signIn();
+      if (user) this.renderList();
+    } catch (error) {
+      alert(error.message || "Google 로그인 실패");
+    }
+  },
+
+  async downloadFromFirebaseFromList() {
+    try {
+      await FirebaseService.connect();
+      if (!FirebaseService.isSignedIn()) {
+        await FirebaseService.signIn();
+        return;
+      }
+
+      const trips = await FirebaseService.downloadTrips();
+      if (!trips.length) {
+        alert("Firebase에 저장된 여행 데이터가 없습니다. 먼저 PC에서 현재 데이터를 업로드하세요.");
+        return;
+      }
+
+      if (!confirm("Firebase 데이터를 이 기기로 불러올까요? 현재 로컬 데이터는 클라우드 데이터로 교체됩니다.")) return;
+
+      AppState.replaceTripsFromCloud(trips);
+      App.render();
+      alert("Firebase 데이터를 불러왔습니다.");
+    } catch (error) {
+      alert(error.message || "Firebase 다운로드 실패");
+    }
+  }
+
 };

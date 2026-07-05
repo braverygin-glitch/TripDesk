@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-3-0-built-in-firebase-config";
+const CACHE_NAME = "tripdesk-v1-3-2-stable";
 const ASSETS = [
   "./",
   "./index.html",
