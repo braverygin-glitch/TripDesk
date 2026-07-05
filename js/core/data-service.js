@@ -12,6 +12,7 @@ window.DataService = {
 
   saveTrips(trips) {
     LocalStorageService.saveTrips(trips);
+    FirebaseService.scheduleSaveTrips?.(trips);
   },
 
   getCurrentTripId() {
@@ -27,6 +28,6 @@ window.DataService = {
   },
 
   statusText() {
-    return "로컬 저장 사용 중 · Firebase는 V2에서 연결 예정";
+    return `로컬 저장 사용 중 · ${FirebaseService.statusText()}`;
   }
 };

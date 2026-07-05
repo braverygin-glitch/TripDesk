@@ -1,15 +1,20 @@
-TripDesk V1.0.9.1 사용방법
+TripDesk V1.0.10 사용방법
 
-이번 버전은 모바일 버튼 표시 수정 버전입니다.
+이번 버전은 Firebase 동기화 준비/연결 버전입니다.
 
-실행:
-1. GitHub Pages 주소 접속
-   https://braverygin-glitch.github.io/TripDesk/
+기본 사용:
+- Firebase 설정 없이도 기존처럼 로컬 저장으로 작동합니다.
 
-업데이트 후 휴대폰에서 이전 화면이 계속 보이면:
-1. Safari/Chrome 새로고침
-2. 그래도 같으면 브라우저 탭을 닫고 다시 접속
-3. 홈 화면 설치 앱이면 앱 삭제 후 다시 홈 화면에 추가
+Firebase 사용:
+1. Firebase 프로젝트 생성
+2. 웹 앱 추가 후 firebaseConfig 복사
+3. TripDesk > 더보기 > Firebase 동기화 > 설정
+4. firebaseConfig JSON 붙여넣기
+5. 연결
+6. Google 로그인
+7. PC에서 현재 데이터 업로드
+8. 휴대폰에서 같은 계정으로 로그인
+9. 클라우드에서 불러오기 또는 실시간 동기화 시작
 
 커밋 추천:
-fix: 모바일 여행 카드 버튼 줄바꿈 수정
+feat: Firebase 동기화 기본 구조 추가

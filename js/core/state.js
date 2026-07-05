@@ -83,5 +83,26 @@ window.AppState = {
     this.openTrip(trip.id);
     this.save();
     return trip;
+  },
+
+  replaceTripsFromCloud(trips) {
+    this.trips = Array.isArray(trips) ? trips : [];
+    this.trips.forEach(trip => Utils.normalizeTrip(trip));
+
+    if (this.currentTripId && !this.currentTrip()) {
+      this.currentTripId = this.trips[0]?.id || null;
+    }
+
+    if (!this.currentTripId && this.trips.length) {
+      this.currentTripId = this.trips[0].id;
+    }
+
+    LocalStorageService.saveTrips(this.trips);
+
+    if (this.currentTripId) {
+      DataService.setCurrentTripId(this.currentTripId);
+    } else {
+      DataService.clearCurrentTripId();
+    }
   }
 };
