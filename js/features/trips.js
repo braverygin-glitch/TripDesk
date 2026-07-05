@@ -24,11 +24,9 @@ window.TripsFeature = {
 
         <section class="card firebase-first-card">
           <div class="card-title">Firebase 동기화</div>
-          <p class="small">${FirebaseService.statusText ? FirebaseService.statusText() : "Firebase 상태 확인 중"}</p>
-          <p class="small">PC에서 업로드한 여행 데이터를 휴대폰으로 불러올 수 있습니다. 한 번 실시간 동기화를 시작하면 다음부터 자동 연결을 시도합니다.</p>
+          <p class="small">${FirebaseService.statusText ? FirebaseService.statusText() : "Firebase 준비됨"}</p>
+          <p class="small">PC에서 업로드한 여행 데이터를 휴대폰으로 불러올 수 있습니다.</p>
           <div class="grid-2">
-            <button class="btn" onclick="TripsFeature.showFirebaseConfigFromList()">설정</button>
-            <button class="btn" onclick="TripsFeature.connectFirebaseFromList()">연결</button>
             <button class="btn primary" onclick="TripsFeature.signInFirebaseFromList()">Google 로그인</button>
             <button class="btn" onclick="TripsFeature.downloadFromFirebaseFromList()">클라우드에서 불러오기</button>
           </div>

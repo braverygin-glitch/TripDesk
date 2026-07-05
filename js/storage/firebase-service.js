@@ -24,6 +24,10 @@ window.FirebaseService = {
   },
 
   getConfig() {
+    if (window.TRIPDESK_FIREBASE_CONFIG?.apiKey) {
+      return window.TRIPDESK_FIREBASE_CONFIG;
+    }
+
     try {
       const raw = localStorage.getItem(this.configKey);
       if (!raw) return null;
@@ -58,7 +62,7 @@ window.FirebaseService = {
 
   clearConfig() {
     localStorage.removeItem(this.configKey);
-    this.enabled = false;
+    this.enabled = Boolean(window.TRIPDESK_FIREBASE_CONFIG?.apiKey);
     this.connected = false;
     this.user = null;
   },
@@ -324,7 +328,7 @@ window.FirebaseService = {
 
   statusText() {
     if (!this.getConfig()) return "Firebase 설정 없음";
-    if (!this.connected) return "Firebase 설정 있음 · 연결 전";
+    if (!this.connected) return "Firebase 준비됨 · 연결 전";
     if (!this.user) return "Firebase 연결됨 · 로그인 전";
     if (this.syncEnabled) return `실시간 동기화 중 · ${this.user.email}`;
     return `로그인됨 · ${this.user.email}`;
