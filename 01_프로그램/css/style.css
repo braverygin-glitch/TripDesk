@@ -657,3 +657,114 @@ button { cursor: pointer; }
   }
 }
 
+/* V1.4 Stable rebuild: layout, buttons, Firebase card */
+.trip-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.trip-actions .btn,
+.trip-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 74px;
+  padding: 10px 8px;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.15;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #e2e8f0;
+  color: var(--text);
+  font-weight: 850;
+}
+
+.trip-action-btn.danger,
+.trip-actions .danger {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.trip-action-icon {
+  display: block;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.trip-action-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.firebase-first-card .grid-2 .btn {
+  min-height: 52px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.expense-main .item-title,
+.expense-main .item-meta,
+.trip-name,
+.trip-date {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 430px) {
+  .trip-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .trip-actions .btn,
+  .trip-action-btn {
+    min-height: 68px;
+    padding: 9px 6px;
+  }
+
+  .trip-action-icon {
+    font-size: 20px;
+  }
+
+  .trip-action-label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .trip-actions {
+    gap: 6px;
+  }
+
+  .trip-actions .btn,
+  .trip-action-btn {
+    min-height: 64px;
+    padding: 8px 4px;
+  }
+
+  .trip-action-label {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .trip-action-btn,
+  .trip-actions .btn {
+    background: #374151;
+    color: var(--text);
+  }
+
+  .trip-action-btn.danger,
+  .trip-actions .danger {
+    background: #7f1d1d;
+    color: #fecaca;
+  }
+}
+

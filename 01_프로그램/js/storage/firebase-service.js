@@ -3,9 +3,11 @@ window.FirebaseService = {
   connected: false,
   syncEnabled: false,
   user: null,
+
   configKey: "tripdesk.firebase.config",
   autoSyncKey: "tripdesk.firebase.autoSync",
   redirectPendingKey: "tripdesk.firebase.redirectPending",
+
   saveTimer: null,
   autoStarted: false,
   unsubscribeTrips: null,
@@ -25,7 +27,7 @@ window.FirebaseService = {
   },
 
   getConfig() {
-    if (window.TRIPDESK_FIREBASE_CONFIG?.apiKey) {
+    if (window.TRIPDESK_FIREBASE_CONFIG && window.TRIPDESK_FIREBASE_CONFIG.apiKey) {
       return window.TRIPDESK_FIREBASE_CONFIG;
     }
 
@@ -70,7 +72,12 @@ window.FirebaseService = {
 
   async connect() {
     const config = this.getConfig();
+
     if (!config) {
+      console.error("TRIPDESK_FIREBASE_CONFIG missing", {
+        hasWindowConfig: Boolean(window.TRIPDESK_FIREBASE_CONFIG),
+        scriptList: Array.from(document.scripts).map(s => s.src)
+      });
       throw new Error("Firebase 설정이 없습니다.");
     }
 
@@ -89,7 +96,10 @@ window.FirebaseService = {
       this.modules.auth = authModule;
       this.modules.firestore = firestoreModule;
 
-      this.firebaseApp = appModule.initializeApp(config);
+      this.firebaseApp = appModule.getApps().length
+        ? appModule.getApps()[0]
+        : appModule.initializeApp(config);
+
       this.auth = authModule.getAuth(this.firebaseApp);
       this.db = firestoreModule.getFirestore(this.firebaseApp);
 
@@ -102,6 +112,8 @@ window.FirebaseService = {
         if (redirectResult?.user) {
           this.user = redirectResult.user;
           sessionStorage.removeItem(this.redirectPendingKey);
+        } else if (this.auth.currentUser) {
+          this.user = this.auth.currentUser;
         }
       } catch (redirectError) {
         sessionStorage.removeItem(this.redirectPendingKey);
@@ -128,22 +140,22 @@ window.FirebaseService = {
     const hasRedirectMarker = sessionStorage.getItem(this.redirectPendingKey) === "1";
     const hasAuthParams = /[?&](apiKey|oobCode|mode|state|code)=/.test(location.search || "");
 
-    if (!hasRedirectMarker && !hasAuthParams) return false;
+    if (!hasRedirectMarker && !hasAuthParams) {
+      await this.connect();
+      return Boolean(this.user || this.auth?.currentUser);
+    }
 
     await this.connect();
     sessionStorage.removeItem(this.redirectPendingKey);
     return Boolean(this.user || this.auth?.currentUser);
   },
 
-
   async signIn() {
     await this.connect();
 
     try {
       const provider = new this.modules.auth.GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: "select_account"
-      });
+      provider.setCustomParameters({ prompt: "select_account" });
 
       if (this.isMobileBrowser()) {
         sessionStorage.setItem(this.redirectPendingKey, "1");
@@ -178,6 +190,7 @@ window.FirebaseService = {
       throw new Error(`Google 로그인에 실패했습니다${code}.${message}`);
     }
   },
+
   async signOut() {
     if (!this.connected || !this.auth) return;
     this.stopRealtimeSync();
@@ -193,20 +206,22 @@ window.FirebaseService = {
     return Boolean(this.user);
   },
 
-  tripsCollectionRef() {
-    if (!this.isReady() || !this.user) {
-      throw new Error("Firebase 로그인이 필요합니다.");
-    }
+  statusText() {
+    if (!this.getConfig()) return "Firebase 설정 없음";
+    if (!this.connected) return "Firebase 준비됨 · 연결 전";
+    if (!this.user) return "Firebase 연결됨 · 로그인 전";
+    if (this.syncEnabled) return `실시간 동기화 중 · ${this.user.email || "사용자"}`;
+    return `로그인됨 · ${this.user.email || "사용자"}`;
+  },
 
+  tripsCollectionRef() {
+    if (!this.isReady() || !this.user) throw new Error("Firebase 로그인이 필요합니다.");
     const { collection } = this.modules.firestore;
     return collection(this.db, "users", this.user.uid, "trips");
   },
 
   tripDocRef(tripId) {
-    if (!this.isReady() || !this.user) {
-      throw new Error("Firebase 로그인이 필요합니다.");
-    }
-
+    if (!this.isReady() || !this.user) throw new Error("Firebase 로그인이 필요합니다.");
     const { doc } = this.modules.firestore;
     return doc(this.db, "users", this.user.uid, "trips", tripId);
   },
@@ -290,9 +305,7 @@ window.FirebaseService = {
   },
 
   startRealtimeSync(onTripsChanged) {
-    if (!this.isReady() || !this.user) {
-      throw new Error("Firebase 로그인이 필요합니다.");
-    }
+    if (!this.isReady() || !this.user) throw new Error("Firebase 로그인이 필요합니다.");
 
     this.stopRealtimeSync();
 
@@ -302,17 +315,13 @@ window.FirebaseService = {
 
     this.unsubscribeTrips = onSnapshot(this.tripsCollectionRef(), snapshot => {
       const trips = [];
-
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         delete data.syncedAt;
         Utils.normalizeTrip(data);
         trips.push(data);
       });
-
-      if (trips.length) {
-        onTripsChanged(trips);
-      }
+      if (trips.length) onTripsChanged(trips);
     }, error => {
       console.error("Realtime sync failed", error);
       UI.setSaveStatus?.("● 실시간 동기화 오류", "warn");
@@ -322,10 +331,7 @@ window.FirebaseService = {
   },
 
   stopRealtimeSync() {
-    if (typeof this.unsubscribeTrips === "function") {
-      this.unsubscribeTrips();
-    }
-
+    if (typeof this.unsubscribeTrips === "function") this.unsubscribeTrips();
     this.unsubscribeTrips = null;
     this.syncEnabled = false;
   },
@@ -345,14 +351,10 @@ window.FirebaseService = {
   },
 
   async startAutoSyncIfPossible(onTripsChanged) {
-    if (this.autoStarted || !this.isAutoSyncEnabled() || !this.getConfig()) {
-      return false;
-    }
+    if (this.autoStarted || !this.isAutoSyncEnabled() || !this.getConfig()) return false;
 
     try {
       await this.connect();
-
-      // Firebase Auth usually restores the previous Google login automatically.
       await new Promise(resolve => window.setTimeout(resolve, 500));
 
       if (!this.user) {
@@ -369,13 +371,5 @@ window.FirebaseService = {
       UI.setSaveStatus?.("● 자동 동기화 실패", "warn");
       return false;
     }
-  },
-
-  statusText() {
-    if (!this.getConfig()) return "Firebase 설정 없음";
-    if (!this.connected) return "Firebase 준비됨 · 연결 전";
-    if (!this.user) return "Firebase 연결됨 · 로그인 전";
-    if (this.syncEnabled) return `실시간 동기화 중 · ${this.user.email}`;
-    return `로그인됨 · ${this.user.email}`;
   }
 };

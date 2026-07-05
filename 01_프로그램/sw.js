@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-3-2-mobile-login-fix";
+const CACHE_NAME = "tripdesk-v1-4-stable-rebuilt";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./data/sample-trips.js",
   "./js/core/utils.js",
   "./js/storage/local-storage-service.js",
+  "./js/storage/firebase-config.js",
   "./js/storage/firebase-service.js",
   "./js/core/data-service.js",
   "./js/core/state.js",

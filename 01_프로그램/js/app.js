@@ -2,6 +2,7 @@ window.App = {
   init() {
     DataService.init();
     AppState.init();
+    FirebaseService.init?.();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {

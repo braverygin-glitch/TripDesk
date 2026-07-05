@@ -9,10 +9,10 @@ window.TripsFeature = {
         </button>
 
         <div class="trip-actions">
-          <button class="trip-action-btn" onclick="TripsFeature.showEditForm('${trip.id}')">✏️ <span>수정</span></button>
-          <button class="trip-action-btn" onclick="TripsFeature.duplicate('${trip.id}')">📋 <span>복사</span></button>
-          <button class="trip-action-btn" onclick="TripsFeature.exportTrip('${trip.id}')">💾 <span>백업</span></button>
-          <button class="trip-action-btn danger" onclick="TripsFeature.remove('${trip.id}')">🗑️ <span>삭제</span></button>
+          <button class="trip-action-btn" onclick="TripsFeature.showEditForm('${trip.id}')"><span class="trip-action-icon">✏️</span><span class="trip-action-label">수정</span></button>
+          <button class="trip-action-btn" onclick="TripsFeature.duplicate('${trip.id}')"><span class="trip-action-icon">📋</span><span class="trip-action-label">복사</span></button>
+          <button class="trip-action-btn" onclick="TripsFeature.exportTrip('${trip.id}')"><span class="trip-action-icon">💾</span><span class="trip-action-label">백업</span></button>
+          <button class="trip-action-btn danger" onclick="TripsFeature.remove('${trip.id}')"><span class="trip-action-icon">🗑️</span><span class="trip-action-label">삭제</span></button>
         </div>
       </section>
     `).join("");
