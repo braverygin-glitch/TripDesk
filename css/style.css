@@ -796,3 +796,19 @@ button { cursor: pointer; }
 .firebase-first-card .btn {
   min-height: 42px;
 }
+
+
+/* V1.1.0 Firebase cleanup */
+.danger-zone {
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}
+
+.danger-zone .card-title {
+  color: var(--danger);
+}
+
+.danger-zone .btn {
+  min-height: 44px;
+  white-space: normal;
+  line-height: 1.25;
+}

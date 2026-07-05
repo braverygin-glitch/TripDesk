@@ -167,11 +167,11 @@ window.FirebaseService = {
     const snapshot = Utils.clone(trips);
 
     this.saveTimer = window.setTimeout(() => {
-      this.uploadTrips(snapshot).catch(error => {
+      this.overwriteTrips(snapshot).catch(error => {
         console.warn("Firebase background sync failed", error);
         UI.setSaveStatus?.("● 로컬 저장됨 · 동기화 실패", "warn");
       });
-    }, 700);
+    }, 900);
   },
 
   async uploadTrips(trips) {
@@ -190,6 +190,33 @@ window.FirebaseService = {
     }
 
     UI.setSaveStatus?.("● 클라우드 동기화됨", "ok");
+    return true;
+  },
+
+  async deleteAllCloudTrips() {
+    await this.connect();
+    if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
+
+    const { getDocs, deleteDoc } = this.modules.firestore;
+    const snapshot = await getDocs(this.tripsCollectionRef());
+
+    const deletes = [];
+    snapshot.forEach(docSnap => {
+      deletes.push(deleteDoc(this.tripDocRef(docSnap.id)));
+    });
+
+    await Promise.all(deletes);
+    UI.setSaveStatus?.("● 클라우드 초기화됨", "ok");
+    return deletes.length;
+  },
+
+  async overwriteTrips(trips) {
+    await this.connect();
+    if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
+
+    await this.deleteAllCloudTrips();
+    await this.uploadTrips(trips);
+    UI.setSaveStatus?.("● 클라우드 덮어쓰기 완료", "ok");
     return true;
   },
 

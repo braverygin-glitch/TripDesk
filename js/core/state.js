@@ -104,5 +104,12 @@ window.AppState = {
     } else {
       DataService.clearCurrentTripId();
     }
+  },
+
+  clearLocalTrips() {
+    this.trips = [];
+    this.currentTripId = null;
+    LocalStorageService.saveTrips([]);
+    DataService.clearCurrentTripId();
   }
 };

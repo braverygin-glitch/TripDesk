@@ -1,15 +1,16 @@
-TripDesk V1.0.10.2 사용방법
+TripDesk V1.1.0 사용방법
 
-이번 버전은 모바일 첫 화면 Firebase 불러오기 패치입니다.
+이번 버전은 Firebase 정리 기능 추가 버전입니다.
 
-PC:
-1. 더보기 > Firebase 동기화
-2. PC/현재 데이터 업로드
+중복 여행 정리:
+1. 목록에서 남길 여행 1개만 남기고 나머지는 삭제
+2. 더보기 > Firebase 정리
+3. 현재 로컬 데이터로 클라우드 덮어쓰기
+4. 휴대폰에서 클라우드에서 불러오기
 
-휴대폰:
-1. https://braverygin-glitch.github.io/TripDesk/
-2. 첫 화면 Firebase 동기화 카드에서 설정/연결/Google 로그인
-3. 클라우드에서 불러오기
+위험 기능:
+- 클라우드 전체 초기화: Firebase에 저장된 모든 여행 삭제
+- 이 기기 로컬 데이터 초기화: 현재 기기의 여행 데이터만 삭제
 
 커밋 추천:
-feat: 모바일 첫 화면 Firebase 불러오기 추가
+feat: Firebase 정리 및 덮어쓰기 기능 추가
