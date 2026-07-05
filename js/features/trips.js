@@ -8,9 +8,10 @@ window.TripsFeature = {
           <div class="small">${Utils.escape(trip.memo || "")}</div>
         </button>
         <div class="trip-actions">
-          <button class="btn ghost" onclick="TripsFeature.showEditForm('${trip.id}')">수정</button>
-          <button class="btn ghost" onclick="TripsFeature.duplicate('${trip.id}')">복사</button>
-          <button class="btn ghost" onclick="TripsFeature.exportTrip('${trip.id}')">백업</button>
+          <button class="btn ghost compact" onclick="TripsFeature.showEditForm('${trip.id}')">✏ 수정</button>
+          <button class="btn ghost compact" onclick="TripsFeature.duplicate('${trip.id}')">📋 복사</button>
+          <button class="btn ghost compact" onclick="TripsFeature.exportTrip('${trip.id}')">💾 백업</button>
+          <button class="btn ghost compact danger-text" onclick="TripsFeature.remove('${trip.id}')">🗑 삭제</button>
         </div>
       </section>
     `).join("");
@@ -20,8 +21,8 @@ window.TripsFeature = {
       <main class="content">
         ${cards || UI.empty("저장된 여행이 없습니다.")}
         <div class="grid-2">
-          <button class="btn primary" onclick="TripsFeature.showCreateForm()">+ 새 여행</button>
-          <button class="btn" onclick="TripsFeature.showImportChoice()">가져오기</button>
+          <button class="btn primary" onclick="TripsFeature.showCreateForm()">➕ 새 여행</button>
+          <button class="btn" onclick="TripsFeature.showImportChoice()">📂 가져오기</button>
         </div>
         <input id="tripJsonImportFile" class="file-input" type="file" accept="application/json" onchange="TripsFeature.importJson(event)">
         <input id="tripExcelImportFile" class="file-input" type="file" accept=".xlsx,.csv" onchange="TripsFeature.importExcel(event)">

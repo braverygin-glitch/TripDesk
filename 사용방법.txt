@@ -1,22 +1,18 @@
-TripDesk V1.0.8 사용방법
+TripDesk V1.0.9 사용방법
 
-이번 버전은 GitHub Pages 배포 준비용입니다.
-
-중요 변경:
-- index.html이 프로젝트 최상위로 이동했습니다.
-- css, js, data, templates 폴더도 최상위로 이동했습니다.
-- 01_프로그램 폴더는 더 이상 사용하지 않습니다.
-- 02_여행데이터와 03_백업은 .gitignore로 GitHub에서 제외됩니다.
+이번 버전은 모바일 UI 안정화 버전입니다.
 
 실행:
+1. GitHub Pages 주소 접속
+   https://braverygin-glitch.github.io/TripDesk/
+
+또는 로컬에서:
 1. index.html 더블클릭
 
-GitHub Pages:
-1. 이 구조 그대로 GitHub에 커밋
-2. Settings > Pages
-3. Deploy from branch
-4. main / root 선택
-5. 생성된 주소로 접속
+주요 개선:
+- 여행 카드 버튼이 한 줄로 보이도록 수정
+- 모바일 버튼 크기와 여백 조정
+- 하단 네비게이션 최적화
 
 커밋 추천:
-chore: GitHub Pages 배포 구조 정리
+style: 모바일 UI 안정화
