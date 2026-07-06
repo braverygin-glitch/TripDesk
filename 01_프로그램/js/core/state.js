@@ -2,10 +2,12 @@ window.AppState = {
   trips: [],
   currentTripId: null,
   currentTab: "home",
+  calendarMonth: Utils.monthKey?.() || "",
 
   init() {
     this.trips = DataService.loadTrips();
     this.currentTripId = DataService.getCurrentTripId();
+    this.calendarMonth = Utils.monthKey?.() || Utils.today().slice(0, 7);
 
     if (this.currentTripId && !this.currentTrip()) {
       this.currentTripId = null;

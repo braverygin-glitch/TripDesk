@@ -39,6 +39,7 @@ window.TripsFeature = {
         <input id="tripJsonImportFile" class="file-input" type="file" accept="application/json" onchange="TripsFeature.importJson(event)">
         <input id="tripExcelImportFile" class="file-input" type="file" accept=".xlsx,.csv" onchange="TripsFeature.importExcel(event)">
       </main>
+        ${UI.nav()}
     `;
   },
 

@@ -1,46 +1,196 @@
 window.ScheduleFeature = {
   render(trip) {
-    const sorted = [...trip.schedule].sort(Utils.sortSchedule);
-    const pinned = sorted.filter(item => item.pinned);
-    const groups = Utils.groupBy(sorted, item => item.date);
+    trip.schedule = trip.schedule || [];
+    trip.bookings = trip.bookings || [];
+    trip.expenses = trip.expenses || [];
+
+    const baseDate = trip.startDate || Utils.today();
+    const month = AppState.scheduleMonth || Utils.monthKey(baseDate);
+    AppState.scheduleMonth = month;
+
+    const days = Utils.daysInMonth(month);
+    const first = Utils.firstWeekdayOfMonth(month);
+    const cells = [];
+
+    for (let i = 0; i < first; i += 1) cells.push(null);
+    for (let day = 1; day <= days; day += 1) {
+      cells.push(`${month}-${String(day).padStart(2, "0")}`);
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const scheduleByDate = Utils.groupBy(trip.schedule, item => item.date || "");
+    const bookingsByDate = Utils.groupBy(trip.bookings, item => item.date || "");
+    const expenseByDate = this.expenseByDate(trip.expenses || []);
 
     return `
-      ${pinned.length ? `
-        <section class="card">
-          <div class="card-title">📌 핀한 일정</div>
-          ${pinned.map(item => this.itemHtml(item)).join("")}
-        </section>
-      ` : ""}
-
       <section class="card">
         <div class="row-between">
-          <div class="card-title">일정</div>
-          <button class="btn primary" onclick="ScheduleFeature.showForm()">+ 추가</button>
+          <div>
+            <div class="card-title">달력</div>
+            <p class="small">일정, 예약, 지출을 날짜별로 봅니다.</p>
+          </div>
+          <button class="btn primary" onclick="ScheduleFeature.showForm()">+ 일정</button>
         </div>
-        <p class="small">날짜별로 자동 정렬됩니다. 확정 일정은 가져오기 시 자동으로 핀 처리됩니다.</p>
+
+        <div class="row-between calendar-toolbar">
+          <div class="row">
+            <button class="btn ghost" onclick="ScheduleFeature.moveMonth(-1)">‹</button>
+            <button class="btn ghost" onclick="ScheduleFeature.goToday()">오늘</button>
+            <button class="btn ghost" onclick="ScheduleFeature.moveMonth(1)">›</button>
+          </div>
+          <div class="calendar-month-title">${Utils.formatMonth(month)}</div>
+        </div>
       </section>
 
-      ${Object.keys(groups).length ? Object.keys(groups).map(date => `
-        <section class="card">
-          <div class="row-between">
-            <div class="card-title">${Utils.formatDate(date)}</div>
-            <button class="btn ghost" onclick="ScheduleFeature.showForm('', '${date}')">+ 추가</button>
-          </div>
-          ${groups[date].map(item => this.itemHtml(item)).join("")}
-        </section>
-      `).join("") : `
-        <section class="card">
-          ${UI.empty("아직 일정이 없습니다. + 추가 버튼으로 일정을 입력하세요.")}
-        </section>
-      `}
+      <section class="card schedule-calendar-card">
+        <div class="calendar-weekdays">
+          ${["일", "월", "화", "수", "목", "금", "토"].map(day => `<div>${day}</div>`).join("")}
+        </div>
+        <div class="calendar-grid">
+          ${cells.map(date => this.dayCell(date, scheduleByDate, bookingsByDate, expenseByDate)).join("")}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">이번 달 요약</div>
+        ${this.monthSummary(month, trip, expenseByDate)}
+      </section>
     `;
   },
 
+  dayCell(date, scheduleByDate, bookingsByDate, expenseByDate) {
+    if (!date) return `<div class="calendar-cell empty"></div>`;
+
+    const schedules = scheduleByDate[date] || [];
+    const bookings = bookingsByDate[date] || [];
+    const expenses = expenseByDate[date] || {};
+    const todayClass = date === Utils.today() ? "today" : "";
+    const count = schedules.length + bookings.length;
+    const expenseText = Object.keys(expenses).map(currency => `${currency} ${ExpensesFeature.formatAmount(expenses[currency])}`).join(" · ");
+
+    return `
+      <button type="button" class="calendar-cell ${todayClass}" onclick="ScheduleFeature.showDay('${date}')">
+        <div class="calendar-date">${Number(date.slice(8, 10))}</div>
+        ${schedules.slice(0, 2).map(item => `<div class="calendar-chip schedule">📅 ${Utils.escape(item.time || "")} ${Utils.escape(item.title)}</div>`).join("")}
+        ${bookings.slice(0, 1).map(item => `<div class="calendar-chip booking">🎫 ${Utils.escape(item.title)}</div>`).join("")}
+        ${count > 3 ? `<div class="calendar-more">+${count - 3}개 더</div>` : ""}
+        ${expenseText ? `<div class="calendar-expense">${Utils.escape(expenseText)}</div>` : ""}
+      </button>
+    `;
+  },
+
+  monthSummary(month, trip, expenseByDate) {
+    const schedules = (trip.schedule || []).filter(item => String(item.date || "").startsWith(month));
+    const bookings = (trip.bookings || []).filter(item => String(item.date || "").startsWith(month));
+    const expenses = Object.keys(expenseByDate)
+      .filter(date => date.startsWith(month))
+      .reduce((acc, date) => {
+        Object.keys(expenseByDate[date]).forEach(currency => {
+          acc[currency] = (acc[currency] || 0) + expenseByDate[date][currency];
+        });
+        return acc;
+      }, {});
+
+    return `
+      <div class="calendar-summary">
+        <div><b>${schedules.length}</b><span>일정</span></div>
+        <div><b>${bookings.length}</b><span>예약</span></div>
+        <div><b>${Object.keys(expenses).length ? Object.keys(expenses).map(c => `${c} ${ExpensesFeature.formatAmount(expenses[c])}`).join(" · ") : "0"}</b><span>지출</span></div>
+      </div>
+    `;
+  },
+
+  expenseByDate(expenses) {
+    return expenses.reduce((acc, raw) => {
+      const item = ExpensesFeature.normalizeExpense ? ExpensesFeature.normalizeExpense(raw) : raw;
+      const date = item.date || "";
+      const currency = item.currency || "EUR";
+      if (!date) return acc;
+
+      acc[date] = acc[date] || {};
+      acc[date][currency] = (acc[date][currency] || 0) + Number(item.amount || 0);
+      return acc;
+    }, {});
+  },
+
+  showDay(date) {
+    const trip = AppState.currentTrip();
+    const schedules = (trip.schedule || []).filter(item => item.date === date).sort(Utils.sortSchedule);
+    const bookings = (trip.bookings || []).filter(item => item.date === date);
+    const expenses = (trip.expenses || []).filter(item => item.date === date);
+
+    UI.modal(`
+      <div class="modal-title">${Utils.formatDate(date)} 상세</div>
+
+      <div class="day-detail-section">
+        <div class="row-between">
+          <div class="card-title">일정</div>
+          <button class="btn primary" onclick="UI.closeModal(); ScheduleFeature.showForm('', '${date}')">+ 추가</button>
+        </div>
+        ${schedules.length ? schedules.map(item => this.dayScheduleHtml(item)).join("") : UI.empty("일정 없음")}
+      </div>
+
+      <div class="day-detail-section">
+        <div class="card-title">예약</div>
+        ${bookings.length ? bookings.map(item => `
+          <div class="item">
+            <div class="item-time">${Utils.escape(item.category || "기타")}</div>
+            <div class="item-title">${Utils.escape(item.title)}</div>
+            ${item.reservationNo ? `<div class="item-meta">예약번호: ${Utils.escape(item.reservationNo)}</div>` : ""}
+          </div>
+        `).join("") : UI.empty("예약 없음")}
+      </div>
+
+      <div class="day-detail-section">
+        <div class="card-title">지출</div>
+        ${expenses.length ? expenses.map(item => `
+          <div class="item">
+            <div class="item-title">${Utils.escape(item.category || "기타")} · ${Utils.escape(item.title || "")}</div>
+            <div class="item-meta">${Utils.escape(item.currency || "EUR")} ${ExpensesFeature.formatAmount(item.amount)}</div>
+          </div>
+        `).join("") : UI.empty("지출 없음")}
+      </div>
+
+      <div class="row-between">
+        <span></span>
+        <button class="btn primary" onclick="UI.closeModal()">닫기</button>
+      </div>
+    `);
+  },
+
+  dayScheduleHtml(item) {
+    return `
+      <div class="item">
+        <div class="row-between">
+          <button class="schedule-main" onclick="UI.closeModal(); ScheduleFeature.showForm('${item.id}')">
+            <div class="item-time">${Utils.escape(item.time || "시간 미정")} · ${Utils.escape(item.city || "")}</div>
+            <div class="item-title">${Utils.escape(item.title)}</div>
+            ${item.address ? `<div class="item-meta">📍 ${Utils.escape(item.address)}</div>` : ""}
+            ${item.memo ? `<div class="item-meta">${Utils.escape(item.memo)}</div>` : ""}
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  moveMonth(offset) {
+    AppState.scheduleMonth = Utils.addMonths(AppState.scheduleMonth || Utils.monthKey(), offset);
+    App.render();
+  },
+
+  goToday() {
+    AppState.scheduleMonth = Utils.monthKey();
+    App.render();
+  },
   itemHtml(item) {
     const status = item.confirmed || (item.pinned ? "확정" : "");
     const statusHtml = status ? `<span class="badge">${Utils.escape(status)}</span>` : "";
-    const addressButton = item.address
-      ? `<button class="btn ghost" onclick="ScheduleFeature.openMap('${item.id}')">지도</button>`
+    const mapQuery = Utils.mapQueryFromItem(item);
+    const addressButton = mapQuery
+      ? `
+        <button class="map-btn" onclick="ScheduleFeature.openMap('${item.id}')">지도</button>
+        <button class="map-btn" onclick="ScheduleFeature.openDirections('${item.id}')">길찾기</button>
+      `
       : "";
 
     return `
@@ -54,6 +204,7 @@ window.ScheduleFeature = {
               ${statusHtml}
               ${UI.tags(item.tags)}
             </div>
+            ${item.address ? `<div class="item-meta">📍 ${Utils.escape(item.address)}</div>` : ""}
             ${item.memo ? `<div class="item-meta">${Utils.escape(item.memo)}</div>` : ""}
           </button>
           <div class="schedule-actions">
@@ -245,9 +396,15 @@ window.ScheduleFeature = {
 
   openMap(id) {
     const item = this.find(id);
-    if (!item || !item.address) return;
+    if (!item) return;
 
-    const query = encodeURIComponent(item.address);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank", "noopener");
+    Utils.openMapSearch(Utils.mapQueryFromItem(item));
+  },
+
+  openDirections(id) {
+    const item = this.find(id);
+    if (!item) return;
+
+    Utils.openMapDirections(Utils.mapQueryFromItem(item));
   }
 };

@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-4-7-cloud-download-fix";
+const CACHE_NAME = "tripdesk-v1-5-8-desktop-bottom-nav-fix";
 const ASSETS = [
   "./",
   "./index.html",

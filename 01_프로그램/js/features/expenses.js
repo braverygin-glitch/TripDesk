@@ -68,8 +68,7 @@ window.ExpensesFeature = {
         <div class="card-title">도시별 합계</div>
         ${Object.keys(byCity).length ? this.summaryHtml(byCity) : UI.empty("도시별 합계가 없습니다.")}
       </section>
-
-      <section class="card">
+<section class="card">
         <div class="card-title">여행 전 경비</div>
         ${preExpenses.length ? preExpenses.map(item => this.itemHtml(item)).join("") : UI.empty("여행 전 경비가 없습니다.")}
       </section>

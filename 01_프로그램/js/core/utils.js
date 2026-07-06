@@ -16,6 +16,43 @@ window.Utils = {
       .replaceAll("'", "&#039;");
   },
 
+
+  mapQueryFromItem(item = {}) {
+    const parts = [
+      item.address,
+      item.title,
+      item.city
+    ].filter(Boolean);
+
+    return parts.join(" ").trim();
+  },
+
+  googleMapSearchUrl(query) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || "")}`;
+  },
+
+  googleMapDirectionsUrl(query) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query || "")}&travelmode=walking`;
+  },
+
+  openMapSearch(query) {
+    if (!query) {
+      alert("지도에서 찾을 주소나 장소명이 없습니다.");
+      return;
+    }
+
+    window.open(this.googleMapSearchUrl(query), "_blank", "noopener");
+  },
+
+  openMapDirections(query) {
+    if (!query) {
+      alert("길찾기에 사용할 주소나 장소명이 없습니다.");
+      return;
+    }
+
+    window.open(this.googleMapDirectionsUrl(query), "_blank", "noopener");
+  },
+
   value(id) {
     return document.getElementById(id)?.value.trim() || "";
   },
@@ -24,6 +61,33 @@ window.Utils = {
     const d = new Date();
     const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
     return local.toISOString().slice(0, 10);
+  },
+
+
+  monthKey(value = this.today()) {
+    const date = String(value || this.today()).slice(0, 10);
+    return date.slice(0, 7);
+  },
+
+  addMonths(monthKey, offset) {
+    const [year, month] = String(monthKey || this.monthKey()).split("-").map(Number);
+    const d = new Date(year, (month || 1) - 1 + Number(offset || 0), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  },
+
+  daysInMonth(monthKey) {
+    const [year, month] = String(monthKey || this.monthKey()).split("-").map(Number);
+    return new Date(year, month, 0).getDate();
+  },
+
+  firstWeekdayOfMonth(monthKey) {
+    const [year, month] = String(monthKey || this.monthKey()).split("-").map(Number);
+    return new Date(year, month - 1, 1).getDay();
+  },
+
+  formatMonth(value) {
+    const [year, month] = String(value || this.monthKey()).split("-");
+    return `${year}.${Number(month)}.`;
   },
 
   formatDate(value) {

@@ -53,7 +53,14 @@ window.App = {
   },
 
   setTab(tab) {
+    if (tab === "calendar") tab = "schedule";
     AppState.currentTab = tab;
+
+    if (!AppState.currentTrip()) {
+      TripsFeature.renderList();
+      return;
+    }
+
     this.render();
   },
 
@@ -80,6 +87,18 @@ window.App = {
       content,
       `<button class="btn white" onclick="TripsFeature.goList()">목록</button>`
     );
+
+    this.bindNav();
+  },
+
+  bindNav() {
+    document.querySelectorAll(".nav-btn[data-tab]").forEach(button => {
+      button.onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.setTab(button.dataset.tab);
+      };
+    });
   }
 };
 

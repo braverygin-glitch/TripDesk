@@ -20,7 +20,7 @@ window.UI = {
   nav() {
     const tabs = [
       ["home", "🏠", "홈"],
-      ["schedule", "📅", "일정"],
+      ["schedule", "🗓️", "달력"],
       ["bookings", "📦", "예약"],
       ["expenses", "💰", "경비"],
       ["checklist", "✅", "체크"],
@@ -31,14 +31,13 @@ window.UI = {
     return `
       <nav class="bottom-nav">
         ${tabs.map(([id, icon, label]) => `
-          <button class="nav-btn ${AppState.currentTab === id ? "active" : ""}" onclick="App.setTab('${id}')">
+          <button type="button" class="nav-btn ${AppState.currentTab === id ? "active" : ""}" onclick="App.setTab('${id}')">
             <span>${icon}</span>${label}
           </button>
         `).join("")}
       </nav>
     `;
   },
-
   shell(title, subtitle, content, rightHtml = "") {
     this.app().innerHTML = `
       ${this.topbar(title, subtitle, rightHtml)}
@@ -46,7 +45,7 @@ window.UI = {
         ${this.saveStatus()}
         ${content}
       </main>
-      ${AppState.currentTrip() ? this.nav() : ""}
+      ${this.nav()}
     `;
   },
 

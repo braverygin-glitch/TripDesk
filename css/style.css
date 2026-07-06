@@ -676,3 +676,27 @@ button { cursor: pointer; }
   }
 }
 
+
+
+
+/* V1.5.9 목록 버튼만 수정 */
+.header-list-btn,
+.trip-list-btn,
+.topbar .btn,
+.header .btn{
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+    word-break: keep-all !important;
+}
+
+.header-list-btn,
+.trip-list-btn{
+    min-width:84px !important;
+    width:84px !important;
+    height:56px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:18px !important;
+    font-weight:700 !important;
+}

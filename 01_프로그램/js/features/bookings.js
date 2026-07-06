@@ -39,8 +39,12 @@ window.BookingsFeature = {
   },
 
   itemHtml(item) {
-    const addressButton = item.address
-      ? `<button class="btn ghost" onclick="BookingsFeature.openMap('${item.id}')">지도</button>`
+    const mapQuery = Utils.mapQueryFromItem(item);
+    const addressButton = mapQuery
+      ? `
+        <button class="map-btn" onclick="BookingsFeature.openMap('${item.id}')">지도</button>
+        <button class="map-btn" onclick="BookingsFeature.openDirections('${item.id}')">길찾기</button>
+      `
       : "";
 
     const reservationHtml = item.reservationNo
@@ -184,9 +188,15 @@ window.BookingsFeature = {
 
   openMap(id) {
     const item = this.find(id);
-    if (!item || !item.address) return;
+    if (!item) return;
 
-    const query = encodeURIComponent(item.address);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank", "noopener");
+    Utils.openMapSearch(Utils.mapQueryFromItem(item));
+  },
+
+  openDirections(id) {
+    const item = this.find(id);
+    if (!item) return;
+
+    Utils.openMapDirections(Utils.mapQueryFromItem(item));
   }
 };

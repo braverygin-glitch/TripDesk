@@ -13,7 +13,7 @@ window.MoreFeature = {
 
       <section class="card">
         <div class="card-title">다음 단계</div>
-        <p class="small">V1.0.7에서 체크리스트 기능을 구현합니다. 사진/메모 기능은 최하위 우선순위로 보류합니다.</p>
+        <p class="small">V1.5.0에서 달력 보기, 예산 분석, 체크리스트 개선을 추가했습니다. 지도 버튼은 보조 기능으로 유지합니다.</p>
       </section>
     `;
   }
