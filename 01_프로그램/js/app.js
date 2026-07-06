@@ -1,8 +1,8 @@
 window.App = {
-  init() {
+  async init() {
     DataService.init();
     AppState.init();
-    FirebaseService.init?.();
+    await FirebaseService.init?.();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -20,12 +20,27 @@ window.App = {
   async handleFirebaseRedirectOnLoad() {
     try {
       const signedIn = await FirebaseService.handleRedirectOnLoad?.();
-      if (signedIn) {
-        this.render();
+      const redirectCompleted = FirebaseService.consumeRedirectCompleted?.();
+
+      if (signedIn || redirectCompleted || FirebaseService.isSignedIn?.()) {
+        if (!AppState.currentTrip()) {
+          TripsFeature.renderList();
+        } else {
+          this.render();
+        }
+
         UI.setSaveStatus?.("● Firebase 로그인됨", "ok");
+        return;
+      }
+
+      if (!AppState.currentTrip()) {
+        TripsFeature.renderList();
       }
     } catch (error) {
       console.warn("Firebase redirect login handling failed", error);
+      if (!AppState.currentTrip()) {
+        TripsFeature.renderList();
+      }
     }
   },
 

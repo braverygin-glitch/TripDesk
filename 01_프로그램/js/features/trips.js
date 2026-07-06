@@ -284,7 +284,10 @@ window.TripsFeature = {
   async signInFirebaseFromList() {
     try {
       const user = await FirebaseService.signIn();
-      if (user) this.renderList();
+
+      if (user || FirebaseService.isSignedIn?.()) {
+        this.renderList();
+      }
     } catch (error) {
       alert(error.message || "Google 로그인 실패");
     }
@@ -292,25 +295,45 @@ window.TripsFeature = {
 
   async downloadFromFirebaseFromList() {
     try {
-      await FirebaseService.connect();
-      if (!FirebaseService.isSignedIn()) {
+      UI.setSaveStatus?.("● Firebase 로그인 확인 중...", "saving");
+
+      let user = await FirebaseService.ensureSignedIn?.(10000);
+
+      if (!user) {
         await FirebaseService.signIn();
+        user = await FirebaseService.ensureSignedIn?.(10000);
+      }
+
+      if (!user) {
+        alert("Firebase 로그인은 필요하지만 현재 기기에서 로그인 상태를 확인하지 못했습니다. Google 로그인 후 다시 '클라우드에서 불러오기'를 눌러주세요.");
+        this.renderList();
         return;
       }
+
+      UI.setSaveStatus?.("● 클라우드 데이터 확인 중...", "saving");
 
       const trips = await FirebaseService.downloadTrips();
+
       if (!trips.length) {
-        alert("Firebase에 저장된 여행 데이터가 없습니다. 먼저 PC에서 현재 데이터를 업로드하세요.");
+        alert(`Firebase에 저장된 여행 데이터가 없습니다. 현재 로그인 계정: ${user.email || "이메일 확인 불가"}`);
+        this.renderList();
         return;
       }
 
-      if (!confirm("Firebase 데이터를 이 기기로 불러올까요? 현재 로컬 데이터는 클라우드 데이터로 교체됩니다.")) return;
+      if (!confirm(`Firebase에서 여행 ${trips.length}개를 불러올까요? 현재 로컬 데이터는 클라우드 데이터로 교체됩니다.`)) {
+        this.renderList();
+        return;
+      }
 
       AppState.replaceTripsFromCloud(trips);
-      App.render();
-      alert("Firebase 데이터를 불러왔습니다.");
+      AppState.closeTrip();
+      this.renderList();
+      UI.setSaveStatus?.("● 클라우드에서 불러옴", "ok");
+      alert(`Firebase 데이터를 불러왔습니다. 여행 ${trips.length}개`);
     } catch (error) {
+      console.error("Firebase download failed", error);
       alert(error.message || "Firebase 다운로드 실패");
+      this.renderList();
     }
   }
 

@@ -76,6 +76,23 @@ window.AppState = {
     return copy;
   },
 
+
+  replaceTripsFromCloud(trips) {
+    this.trips = (trips || []).map(trip => Utils.normalizeTrip(trip));
+    this.currentTripId = this.trips[0]?.id || null;
+    this.currentTab = "home";
+
+    DataService.saveTrips(this.trips);
+
+    if (this.currentTripId) {
+      DataService.setCurrentTripId(this.currentTripId);
+    } else {
+      DataService.clearCurrentTripId();
+    }
+
+    return this.trips;
+  },
+
   importTrip(rawTrip) {
     const trip = Utils.normalizeTrip(rawTrip);
     if (this.findTrip(trip.id)) trip.id = Utils.id("trip");
