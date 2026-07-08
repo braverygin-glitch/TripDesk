@@ -28,13 +28,8 @@ window.MoreFeature = {
       </section>
 
       <section class="card">
-<<<<<<< HEAD
-        <div class="card-title">다음 단계</div>
-        <p class="small">V1.5.0에서 달력 보기, 예산 분석, 체크리스트 개선을 추가했습니다. 지도 버튼은 보조 기능으로 유지합니다.</p>
-=======
         <div class="card-title">버전</div>
         <p class="small">V1.6.7 로그인 UI 복원 + 일정 공유</p>
->>>>>>> 613d7dd (Add share page and copy button)
       </section>
     `;
   },
