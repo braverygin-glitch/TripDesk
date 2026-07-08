@@ -85,7 +85,7 @@ window.App = {
       trip.name,
       `${Utils.formatDate(trip.startDate)} ~ ${Utils.formatDate(trip.endDate)} · ${trip.travelers}`,
       content,
-      `<button class="btn white" onclick="TripsFeature.goList()">목록</button>`
+      `<button type="button" class="btn white top-list-button" onclick="TripsFeature.goList()">목록</button>`
     );
 
     this.bindNav();
