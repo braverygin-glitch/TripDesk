@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TripDesk 공유 일정</title>
+  <meta name="theme-color" content="#111827" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="shareApp" class="app share-app">
+    <header class="topbar">
+      <h1 class="top-title">TripDesk 공유 일정</h1>
+      <p class="top-sub">읽기 전용</p>
+    </header>
+    <main class="content">
+      <section class="card">
+        <div class="card-title">공유 일정을 불러오는 중</div>
+        <p class="small">잠시만 기다려 주세요.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/core/utils.js"></script>
+  <script src="js/storage/firebase-config.js?v=1.6.7"></script>
+  <script src="js/storage/firebase-service.js?v=1.6.7"></script>
+  <script src="js/share-view.js?v=1.6.7"></script>
+</body>
+</html>

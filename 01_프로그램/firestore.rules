@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId}/trips/{tripId} {
+      allow read, write: if request.auth != null
+                          && request.auth.uid == userId;
+    }
+
+    // TripDesk V1.6.6 공유 링크
+    // 로그인 없는 사용자는 publicShares만 읽을 수 있습니다.
+    // 원본 여행 데이터 users/{uid}/trips는 공개하지 않습니다.
+    match /publicShares/{token} {
+      allow read: if true;
+
+      // 공유 문서 생성: 로그인 사용자만 가능하며 ownerUid가 본인 UID여야 함
+      allow create: if request.auth != null
+                    && request.resource.data.ownerUid == request.auth.uid;
+
+      // 공유 갱신/종료: 기존 공유 문서의 ownerUid와 로그인 UID가 같아야 함
+      allow update: if request.auth != null
+                    && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == resource.data.ownerUid;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

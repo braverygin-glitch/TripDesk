@@ -449,6 +449,136 @@ window.FirebaseService = {
     return doc(this.db, "users", this.user.uid, "trips", tripId);
   },
 
+
+  publicShareDocRef(token) {
+    if (!this.db || !this.modules.firestore?.doc) throw new Error("Firebase 연결이 필요합니다.");
+    const { doc } = this.modules.firestore;
+    return doc(this.db, "publicShares", token);
+  },
+
+  createShareToken() {
+    // 128bit 이상 난수 기반 토큰. 링크를 아는 사람만 접근하는 구조이므로 예측 가능성을 낮춥니다.
+    const bytes = new Uint8Array(24);
+
+    if (window.crypto?.getRandomValues) {
+      window.crypto.getRandomValues(bytes);
+    } else {
+      for (let i = 0; i < bytes.length; i += 1) {
+        bytes[i] = Math.floor(Math.random() * 256);
+      }
+    }
+
+    const tokenBody = Array.from(bytes)
+      .map(byte => byte.toString(16).padStart(2, "0"))
+      .join("");
+
+    return `share-${Date.now().toString(36)}-${tokenBody}`;
+  },
+
+  sanitizeScheduleForShare(schedule = []) {
+    return (schedule || []).map(item => ({
+      id: item.id || "",
+      date: item.date || "",
+      time: item.time || "",
+      city: item.city || "",
+      title: item.title || "",
+      type: item.type || "",
+      confirmed: item.confirmed || "",
+      address: item.address || ""
+    })).filter(item => item.date || item.title);
+  },
+
+  sanitizeChecklistForShare(checklist = []) {
+    return (checklist || []).map(item => ({
+      id: item.id || "",
+      category: item.category || "기타",
+      text: item.text || item.title || "",
+      done: Boolean(item.done)
+    })).filter(item => item.text);
+  },
+
+  shareExpiresAtForTrip(trip) {
+    const endDate = Utils.normalizeDate?.(trip?.endDate) || trip?.endDate || Utils.today();
+    return `${endDate}T23:59:59+09:00`;
+  },
+
+  buildSharePayload(trip, existingToken = "") {
+    const token = existingToken || this.createShareToken();
+    const expiresAt = this.shareExpiresAtForTrip(trip);
+
+    return {
+      token,
+      ownerUid: this.user?.uid || "",
+      tripId: trip.id,
+      title: trip.name || "공유 여행",
+      startDate: trip.startDate || "",
+      endDate: trip.endDate || "",
+      travelers: trip.travelers || "",
+      status: "active",
+      scope: {
+        schedule: true,
+        checklist: true,
+        expenses: false,
+        bookings: false,
+        notes: false,
+        management: false
+      },
+      expiresAt,
+      publicUpdatedAt: new Date().toISOString(),
+      schedule: this.sanitizeScheduleForShare(trip.schedule || []),
+      checklist: this.sanitizeChecklistForShare(trip.checklist || [])
+    };
+  },
+
+  async createOrUpdatePublicShare(trip) {
+    const user = await this.ensureSignedIn?.(10000);
+    if (!user) throw new Error("Firebase 로그인이 필요합니다.");
+
+    const { setDoc, serverTimestamp } = this.modules.firestore;
+    const token = trip.share?.token || this.createShareToken();
+    const payload = this.buildSharePayload(trip, token);
+
+    await setDoc(this.publicShareDocRef(token), {
+      ...payload,
+      updatedAt: serverTimestamp(),
+      createdAt: trip.share?.createdAt || new Date().toISOString()
+    }, { merge: true });
+
+    return {
+      token,
+      url: `${location.origin}${location.pathname.replace(/index\.html$/, "")}share.html?token=${encodeURIComponent(token)}`,
+      expiresAt: payload.expiresAt
+    };
+  },
+
+  async stopPublicShare(token) {
+    const user = await this.ensureSignedIn?.(10000);
+    if (!user) throw new Error("Firebase 로그인이 필요합니다.");
+
+    const { setDoc, serverTimestamp } = this.modules.firestore;
+    await setDoc(this.publicShareDocRef(token), {
+      ownerUid: this.user.uid,
+      status: "stopped",
+      stoppedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    return true;
+  },
+
+  async loadPublicShare(token) {
+    await this.connect();
+
+    const { getDoc } = this.modules.firestore;
+    const snapshot = await getDoc(this.publicShareDocRef(token));
+
+    if (!snapshot.exists()) {
+      throw new Error("공유 링크를 찾을 수 없습니다.");
+    }
+
+    return snapshot.data();
+  },
+
   scheduleSaveTrips(trips) {
     if (!this.isReady() || !this.isSignedIn() || !this.syncEnabled) return;
 

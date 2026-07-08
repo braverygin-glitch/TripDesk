@@ -2130,3 +2130,93 @@ body {
   }
 }
 
+<<<<<<< HEAD
+=======
+/* V1.6.5 Share */
+.share-url-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.share-summary {
+  margin-top: 12px;
+}
+
+.share-app .content,
+.share-content {
+  padding-bottom: 40px !important;
+}
+
+.share-day,
+.share-check-group {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.share-day:last-child,
+.share-check-group:last-child {
+  border-bottom: 0;
+}
+
+.share-day-title {
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.share-item {
+  padding: 10px 0;
+}
+
+.share-time {
+  color: var(--primary);
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.share-title {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.share-meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.share-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.share-check.done {
+  color: var(--muted);
+}
+
+/* V1.6.6 Share security notice */
+.share-security-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+
+.share-actions{display:flex;gap:8px;align-items:center;margin-top:8px}
+.share-url-input{flex:1}
+.copy-share-btn{white-space:nowrap}
+>>>>>>> 613d7dd (Add share page and copy button)

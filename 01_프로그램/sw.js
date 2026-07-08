@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 const CACHE_NAME = "tripdesk-v1-6-1-time-currency-fix";
+=======
+const CACHE_NAME = "tripdesk-v1-6-7-restore-login-share";
+>>>>>>> 613d7dd (Add share page and copy button)
 const ASSETS = [
   "./",
   "./index.html",
+  "./share.html",
   "./manifest.json",
   "./css/style.css",
   "./data/sample-trips.js",
@@ -21,7 +26,8 @@ const ASSETS = [
   "./js/features/expenses.js",
   "./js/features/checklist.js",
   "./js/features/more.js",
-  "./js/app.js"
+  "./js/app.js",
+  "./js/share-view.js"
 ];
 
 self.addEventListener("install", event => {
