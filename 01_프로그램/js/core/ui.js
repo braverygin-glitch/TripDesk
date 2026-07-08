@@ -32,7 +32,8 @@ window.UI = {
       <nav class="bottom-nav">
         ${tabs.map(([id, icon, label]) => `
           <button type="button" class="nav-btn ${AppState.currentTab === id ? "active" : ""}" onclick="App.setTab('${id}')">
-            <span>${icon}</span>${label}
+            <span>${icon}</span>
+            <em>${label}</em>
           </button>
         `).join("")}
       </nav>

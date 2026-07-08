@@ -4,8 +4,7 @@ window.ScheduleFeature = {
     trip.bookings = trip.bookings || [];
     trip.expenses = trip.expenses || [];
 
-    const baseDate = trip.startDate || Utils.today();
-    const month = AppState.scheduleMonth || Utils.monthKey(baseDate);
+    const month = AppState.scheduleMonth || Utils.monthKey(trip.startDate || Utils.today());
     AppState.scheduleMonth = month;
 
     const days = Utils.daysInMonth(month);

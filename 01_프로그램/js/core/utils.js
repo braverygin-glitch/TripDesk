@@ -145,6 +145,18 @@ window.Utils = {
       return `${match[1].padStart(2, "0")}:${match[2]}`;
     }
 
+    // HHmm / Hmm numeric input, e.g. 0730 -> 07:30, 900 -> 09:00
+    match = text.match(/^(\d{3,4})$/);
+    if (match) {
+      const raw = match[1].padStart(4, "0");
+      const hour = Number(raw.slice(0, 2));
+      const minute = Number(raw.slice(2, 4));
+
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+      }
+    }
+
     // 1:55 AM / 1:55:00 AM
     match = text.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
     if (match) {

@@ -88,7 +88,7 @@ window.ExpensesFeature = {
         <div class="row-between">
           <button class="expense-main" onclick="ExpensesFeature.showForm('${item.id}')">
             <div class="item-time">${typeLabel} · ${Utils.formatDate(item.date)} · ${Utils.escape(item.city || "도시 미정")}</div>
-            <div class="item-title">${Utils.escape(item.category || "기타")} · ${Utils.escape(item.currency || "EUR")} ${this.formatAmount(item.amount)}</div>
+            <div class="item-title">${Utils.escape(item.category || "기타")} · ${Utils.escape(item.currency || "EUR")} ${this.formatAmount(item.amount, item.currency)}</div>
             ${item.memo ? `<div class="item-meta">${Utils.escape(item.memo)}</div>` : ""}
             ${item.paymentMethod ? `<div class="item-meta">결제: ${Utils.escape(item.paymentMethod)}</div>` : ""}
           </button>
@@ -325,7 +325,7 @@ window.ExpensesFeature = {
     const item = this.find(id);
     if (!item) return;
 
-    if (!confirm(`"${item.category} ${item.currency} ${this.formatAmount(item.amount)}" 경비를 삭제할까요?`)) return;
+    if (!confirm(`"${item.category} ${item.currency} ${this.formatAmount(item.amount, item.currency)}" 경비를 삭제할까요?`)) return;
 
     trip.expenses = (trip.expenses || []).filter(expense => expense.id !== id);
 
@@ -371,7 +371,7 @@ window.ExpensesFeature = {
   totalHtml(total, emptyText) {
     return Object.keys(total).length
       ? Object.keys(total).map(currency => `
-        <div class="expense-total">${Utils.escape(currency)} ${this.formatAmount(total[currency])}</div>
+        <div class="expense-total">${Utils.escape(currency)} ${this.formatAmount(total[currency], currency)}</div>
       `).join("")
       : UI.empty(emptyText);
   },
@@ -380,7 +380,7 @@ window.ExpensesFeature = {
     return Object.keys(summary).map(name => `
       <div class="expense-summary-row">
         <b>${Utils.escape(name)}</b>
-        <span>${Object.keys(summary[name]).map(currency => `${Utils.escape(currency)} ${this.formatAmount(summary[name][currency])}`).join(" · ")}</span>
+        <span>${Object.keys(summary[name]).map(currency => `${Utils.escape(currency)} ${this.formatAmount(summary[name][currency], currency)}`).join(" · ")}</span>
       </div>
     `).join("");
   },
@@ -458,10 +458,28 @@ window.ExpensesFeature = {
       .replace(/\r/g, "\\r");
   },
 
-  formatAmount(value) {
+  fractionDigits(currency = "") {
+    const zeroDecimalCurrencies = new Set([
+      "KRW",
+      "JPY",
+      "VND",
+      "IDR",
+      "CLP",
+      "PYG",
+      "XOF",
+      "XAF",
+      "XPF"
+    ]);
+
+    return zeroDecimalCurrencies.has(String(currency || "").toUpperCase()) ? 0 : 2;
+  },
+
+  formatAmount(value, currency = "") {
+    const digits = this.fractionDigits(currency);
+
     return Number(value || 0).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
     });
   }
 };
