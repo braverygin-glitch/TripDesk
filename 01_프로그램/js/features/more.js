@@ -14,11 +14,20 @@ window.MoreFeature = {
       </section>
 
       <section class="card">
-        <div>
+          <div>
             <div class="card-title">일정 공유</div>
             <p class="small">일정과 체크리스트만 읽기 전용 링크로 공유합니다. 링크는 여행 종료 후 자동 만료됩니다.</p>
-          </div>
-          <button class="btn primary" style="width:100%;margin-top:12px" onclick="MoreFeature.showSharePanel()">공유하기</button>
+        </div>
+      
+        <button
+          type="button"
+          class="btn primary"
+          style="width:100%;margin-top:12px"
+          onclick="MoreFeature.showSharePanel()"
+        >
+          공유하기
+        </button>
+      
         ${this.shareSummary(trip)}
       </section>
 
@@ -46,7 +55,21 @@ window.MoreFeature = {
       <div class="notice share-summary">
         <b>${status}</b><br>
         만료: ${Utils.escape(this.expireText(trip.share.expiresAt || FirebaseService.shareExpiresAtForTrip(trip)))}<br>
-        <div class="share-actions"><input class="share-url-input" value="${Utils.escape(url)}" readonly onclick="this.select()"><button class="btn copy-share-btn" onclick="navigator.clipboard.writeText(`${url}`).then(()=>alert('링크가 복사되었습니다.'))">복사</button></div>
+        <div class="share-actions">
+          <input
+            class="share-url-input"
+            value="${Utils.escape(url)}"
+            readonly
+            onclick="this.select()"
+          >
+          <button
+            type="button"
+            class="btn copy-share-btn"
+            onclick="MoreFeature.copyShareLink()"
+          >
+            복사
+          </button>
+        </div>
       </div>
     `;
   },

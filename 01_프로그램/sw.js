@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-const CACHE_NAME = "tripdesk-v1-6-1-time-currency-fix";
-=======
-const CACHE_NAME = "tripdesk-v1-6-7-restore-login-share";
->>>>>>> 613d7dd (Add share page and copy button)
+const CACHE_NAME = "tripdesk-v1-7-0-expense-report";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,6 +19,7 @@ const ASSETS = [
   "./js/features/home.js",
   "./js/features/schedule.js",
   "./js/features/bookings.js",
+  "./js/features/expense-analysis.js",
   "./js/features/expenses.js",
   "./js/features/checklist.js",
   "./js/features/more.js",
