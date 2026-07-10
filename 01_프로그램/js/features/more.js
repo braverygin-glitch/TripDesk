@@ -9,6 +9,7 @@ window.MoreFeature = {
           <button class="btn primary" onclick="MoreFeature.signInFirebase()">Google 로그인</button>
           <button class="btn" onclick="MoreFeature.downloadFromFirebase()">클라우드에서 불러오기</button>
           <button class="btn" onclick="MoreFeature.uploadToFirebase()">클라우드에 저장</button>
+          <button class="btn" onclick="MoreFeature.showCloudManager()">클라우드 데이터 관리</button>
           <button class="btn danger" onclick="MoreFeature.signOutFirebase()">로그아웃</button>
         </div>
       </section>
@@ -38,7 +39,7 @@ window.MoreFeature = {
 
       <section class="card">
         <div class="card-title">버전</div>
-        <p class="small">V1.6.7 로그인 UI 복원 + 일정 공유</p>
+        <p class="small">V1.7.2 클라우드 데이터 관리</p>
       </section>
     `;
   },
@@ -173,6 +174,112 @@ window.MoreFeature = {
     }
 
     return user;
+  },
+
+  async showCloudManager() {
+    try {
+      const user = await this.ensureFirebaseUser();
+      if (!user) return;
+
+      UI.setSaveStatus?.("● 클라우드 목록 확인 중...", "saving");
+
+      UI.modal(`
+        <div class="modal-title">클라우드 데이터 관리</div>
+        <div class="notice">
+          Firestore에 저장된 여행만 표시합니다.<br>
+          <b>삭제</b>를 누르면 클라우드와 현재 기기의 로컬 데이터에서 함께 삭제됩니다.
+          다른 기기에 로컬 사본이 남아 있다면 그 기기에서 다시 업로드될 수 있습니다.
+        </div>
+        <div id="cloudTripList" class="cloud-trip-list">
+          <p class="small">클라우드 데이터를 불러오는 중입니다.</p>
+        </div>
+        <div class="row-between cloud-manager-footer">
+          <button class="btn" onclick="MoreFeature.refreshCloudManager()">새로고침</button>
+          <button class="btn primary" onclick="UI.closeModal()">닫기</button>
+        </div>
+      `);
+
+      await this.refreshCloudManager();
+    } catch (error) {
+      console.error("Cloud manager open failed", error);
+      UI.setSaveStatus?.("● 클라우드 목록 오류", "warn");
+      alert(error.message || "클라우드 데이터를 불러오지 못했습니다.");
+    }
+  },
+
+  async refreshCloudManager() {
+    const container = document.getElementById("cloudTripList");
+    if (!container) return;
+
+    try {
+      container.innerHTML = `<p class="small">클라우드 데이터를 불러오는 중입니다.</p>`;
+      const trips = await FirebaseService.listCloudTrips();
+
+      if (!trips.length) {
+        container.innerHTML = UI.empty("클라우드에 저장된 여행이 없습니다.");
+        UI.setSaveStatus?.("● 클라우드 비어 있음", "ok");
+        return;
+      }
+
+      container.innerHTML = trips.map(item => `
+        <div class="cloud-trip-item">
+          <div class="cloud-trip-main">
+            <div class="item-title">${Utils.escape(item.name)}</div>
+            <div class="item-meta">
+              ${Utils.escape(item.startDate || "시작일 없음")}
+              ${item.endDate ? ` ~ ${Utils.escape(item.endDate)}` : ""}
+            </div>
+            <div class="item-meta">
+              일정 ${item.scheduleCount}개 · 경비 ${item.expenseCount}개
+              ${item.hasLocalCopy ? " · 이 기기에 로컬 사본 있음" : " · 로컬 사본 없음"}
+            </div>
+          </div>
+          <div class="cloud-trip-actions">
+            <button
+              type="button"
+              class="btn danger cloud-delete-both"
+              onclick="MoreFeature.deleteCloudAndLocalTrip('${this.jsString(item.id)}', '${this.jsString(item.name)}')"
+            >삭제</button>
+          </div>
+        </div>
+      `).join("");
+
+      UI.setSaveStatus?.(`● 클라우드 여행 ${trips.length}개`, "ok");
+    } catch (error) {
+      console.error("Cloud manager refresh failed", error);
+      container.innerHTML = `<p class="small">클라우드 목록을 불러오지 못했습니다.</p>`;
+      UI.setSaveStatus?.("● 클라우드 목록 오류", "warn");
+    }
+  },
+
+  async deleteCloudAndLocalTrip(tripId, tripName) {
+    if (!confirm(`"${tripName}"을(를) 삭제할까요?\n\n클라우드와 현재 기기의 로컬 데이터에서 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`)) return;
+
+    try {
+      UI.setSaveStatus?.("● 로컬·클라우드 삭제 중...", "saving");
+
+      await FirebaseService.deleteCloudTrip(tripId);
+
+      if (AppState.findTrip(tripId)) {
+        AppState.deleteTrip(tripId);
+      }
+
+      await this.refreshCloudManager();
+      App.render();
+      alert("여행을 클라우드와 현재 기기에서 삭제했습니다.");
+    } catch (error) {
+      console.error("Cloud and local trip delete failed", error);
+      UI.setSaveStatus?.("● 삭제 실패", "warn");
+      alert(error.message || "여행 삭제에 실패했습니다.");
+    }
+  },
+
+  jsString(value) {
+    return String(value || "")
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'")
+      .replace(/\n/g, "\\n")
+      .replace(/\r/g, "\\r");
   },
 
   showSharePanel() {

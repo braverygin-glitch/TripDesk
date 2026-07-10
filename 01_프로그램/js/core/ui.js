@@ -85,10 +85,7 @@ window.UI = {
 
     document.addEventListener("keydown", this.modalKeyHandler);
     document.body.classList.add("modal-open");
-<<<<<<< HEAD
-=======
     window.BottomNavController?.hide("modal");
->>>>>>> bff5044 (V1.7.1 Fix full page scrolling)
     document.body.appendChild(wrap);
 
     window.setTimeout(() => {
@@ -99,10 +96,7 @@ window.UI = {
   closeModal() {
     document.getElementById("modalBackdrop")?.remove();
     document.body.classList.remove("modal-open");
-<<<<<<< HEAD
-=======
     window.BottomNavController?.show("modal");
->>>>>>> bff5044 (V1.7.1 Fix full page scrolling)
 
     if (this.modalKeyHandler) {
       document.removeEventListener("keydown", this.modalKeyHandler);

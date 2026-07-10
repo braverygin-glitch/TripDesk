@@ -2557,3 +2557,69 @@ body.modal-open {
   overflow: hidden !important;
   height: 100dvh !important;
 }
+
+
+/* V1.7.2 Cloud data manager */
+.cloud-trip-list {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.cloud-trip-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.cloud-trip-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cloud-trip-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.cloud-trip-actions .btn {
+  min-width: 92px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.cloud-delete-both {
+  background: #991b1b !important;
+  color: white !important;
+}
+
+.cloud-manager-footer {
+  position: sticky;
+  bottom: 0;
+  padding-top: 10px;
+  background: var(--surface);
+}
+
+@media (max-width: 430px) {
+  .cloud-trip-item {
+    display: grid;
+  }
+
+  .cloud-trip-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .cloud-trip-item {
+    background: #1f2937;
+  }
+}

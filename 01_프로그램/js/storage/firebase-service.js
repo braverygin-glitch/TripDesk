@@ -636,6 +636,46 @@ window.FirebaseService = {
     return true;
   },
 
+  async listCloudTrips() {
+    const user = await this.ensureSignedIn?.(10000);
+    if (!user) throw new Error("Firebase 로그인이 필요합니다.");
+
+    const { getDocs } = this.modules.firestore;
+    const snapshot = await getDocs(this.tripsCollectionRef());
+    const trips = [];
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data() || {};
+      trips.push({
+        id: docSnap.id,
+        name: String(data.name || "이름 없는 여행"),
+        startDate: data.startDate || "",
+        endDate: data.endDate || "",
+        scheduleCount: Array.isArray(data.schedule) ? data.schedule.length : 0,
+        expenseCount: Array.isArray(data.expenses) ? data.expenses.length : 0,
+        cloudUpdatedAt: data.cloudUpdatedAt || "",
+        hasLocalCopy: Boolean(AppState?.findTrip?.(docSnap.id))
+      });
+    });
+
+    return trips.sort((a, b) => {
+      const dateCompare = String(b.startDate || "").localeCompare(String(a.startDate || ""));
+      return dateCompare || a.name.localeCompare(b.name);
+    });
+  },
+
+  async deleteCloudTrip(tripId) {
+    await this.connect();
+    if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
+    if (!tripId) throw new Error("삭제할 여행 ID가 없습니다.");
+
+    const { deleteDoc } = this.modules.firestore;
+    await deleteDoc(this.tripDocRef(tripId));
+
+    UI.setSaveStatus?.("● 클라우드 여행 삭제됨", "ok");
+    return true;
+  },
+
   async deleteAllCloudTrips() {
     await this.connect();
     if (!this.user) throw new Error("Firebase 로그인이 필요합니다.");
