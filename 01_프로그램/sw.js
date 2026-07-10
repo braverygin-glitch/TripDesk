@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-8-0-pinned-grouping";
+const CACHE_NAME = "tripdesk-v1-8-1-share-hotfix";
 
 const ASSETS = [
   "./",
