@@ -420,15 +420,15 @@ window.ExpensesFeature = {
     const trip = AppState.currentTrip();
     Utils.normalizeTrip(trip);
 
-    const normalizedSelected = String(selected || "").toUpperCase();
-    const currencies = normalizedSelected && !trip.expenseCurrencies.includes(normalizedSelected)
-      ? [normalizedSelected, ...trip.expenseCurrencies]
+    const current = String(selected || "").trim().toUpperCase();
+    const currencies = current && !trip.expenseCurrencies.includes(current)
+      ? [current, ...trip.expenseCurrencies]
       : [...trip.expenseCurrencies];
 
     return currencies
       .filter((currency, index, array) => currency && array.indexOf(currency) === index)
       .map(currency => `
-        <option value="${Utils.escape(currency)}" ${currency === normalizedSelected ? "selected" : ""}>
+        <option value="${Utils.escape(currency)}" ${currency === current ? "selected" : ""}>
           ${Utils.escape(currency)}
         </option>
       `)

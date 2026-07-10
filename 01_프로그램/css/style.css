@@ -2835,80 +2835,31 @@ body.modal-open {
   }
 }
 
-/* V1.8.3 Expense category and currency manager */
-.settings-manager-section {
-  margin-top: 16px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #f8fafc;
-}
-
-.settings-chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
+.settings-chip-list { display:flex; flex-wrap:wrap; gap:8px; }
 .settings-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 36px;
-  padding: 7px 8px 7px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  font-size: 13px;
-  font-weight: 850;
+  display:inline-flex; align-items:center; gap:7px;
+  min-height:36px; padding:7px 8px 7px 11px;
+  border:1px solid var(--line); border-radius:999px;
+  background:var(--surface); font-size:13px; font-weight:850;
 }
-
 .settings-delete-button {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #fee2e2;
-  color: var(--danger);
-  font-size: 17px;
-  font-weight: 900;
-  line-height: 1;
+  width:24px; height:24px; padding:0; border:0; border-radius:50%;
+  background:#fee2e2; color:var(--danger); font-size:17px; font-weight:900;
 }
-
 .settings-add-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  margin-top: 12px;
+  display:grid; grid-template-columns:minmax(0,1fr) auto;
+  gap:8px; margin-top:12px;
 }
-
 .settings-add-row input {
-  width: 100%;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--surface);
-  color: var(--text);
+  width:100%; min-width:0; padding:10px 12px;
+  border:1px solid var(--line); border-radius:13px;
+  background:var(--surface); color:var(--text);
 }
-
 .manager-modal-footer {
-  position: sticky;
-  bottom: 0;
-  margin-top: 16px;
-  padding-top: 10px;
-  background: var(--surface);
+  position:sticky; bottom:0; margin-top:16px; padding-top:10px;
+  background:var(--surface);
 }
-
 @media (prefers-color-scheme: dark) {
-  .settings-manager-section {
-    background: #1f2937;
-  }
-
-  .settings-delete-button {
-    background: #7f1d1d;
-    color: #fecaca;
-  }
+  .settings-manager-section { background:#1f2937; }
+  .settings-delete-button { background:#7f1d1d; color:#fecaca; }
 }
-

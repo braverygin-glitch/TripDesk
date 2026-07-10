@@ -43,13 +43,22 @@ window.MoreFeature = {
       </section>
 
       <section class="card">
+        <div class="card-title">경비 설정</div>
+        <p class="small">현재 여행에서 사용할 경비 분류와 통화를 관리합니다.</p>
+        <div class="grid-2">
+          <button class="btn" onclick="MoreFeature.showExpenseCategoryManager()">경비 분류 관리</button>
+          <button class="btn" onclick="MoreFeature.showCurrencyManager()">통화 관리</button>
+        </div>
+      </section>
+
+      <section class="card">
         <div class="card-title">엑셀 표준</div>
         <p class="small">날짜, 도시, 시간, 제목, 분류, 태그, 확정여부, 메모, 예약번호, 주소</p>
       </section>
 
       <section class="card">
         <div class="card-title">버전</div>
-        <p class="small">V1.8.3 경비 분류·통화 관리</p>
+        <p class="small">V1.8.3 경비 분류·통화 관리 수정</p>
       </section>
     `;
   },
@@ -290,6 +299,207 @@ window.MoreFeature = {
       .replace(/'/g, "\\'")
       .replace(/\n/g, "\\n")
       .replace(/\r/g, "\\r");
+  },
+
+  showExpenseCategoryManager() {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    UI.modal(`
+      <div class="modal-title">경비 분류 관리</div>
+      <p class="small">여행 전과 여행 중 분류를 각각 관리합니다. 사용 중인 분류는 삭제할 수 없습니다.</p>
+
+      ${this.expenseCategorySectionHtml("pre", "여행 전 분류")}
+      ${this.expenseCategorySectionHtml("trip", "여행 중 분류")}
+
+      <div class="row-between manager-modal-footer">
+        <span></span>
+        <button class="btn primary" onclick="UI.closeModal()">닫기</button>
+      </div>
+    `);
+  },
+
+  expenseCategorySectionHtml(type, title) {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+    const categories = trip.expenseCategories[type] || [];
+
+    return `
+      <section class="settings-manager-section">
+        <div class="card-title">${Utils.escape(title)}</div>
+        <div class="settings-chip-list">
+          ${categories.map(category => `
+            <div class="settings-chip">
+              <span>${Utils.escape(category)}</span>
+              <button
+                type="button"
+                class="settings-delete-button"
+                onclick="MoreFeature.removeExpenseCategory('${type}', '${this.jsString(category)}')"
+                aria-label="${Utils.escape(category)} 삭제"
+              >×</button>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="settings-add-row">
+          <input
+            id="expenseCategoryInput-${type}"
+            maxlength="30"
+            placeholder="새 분류 입력"
+            onkeydown="if(event.key === 'Enter') MoreFeature.addExpenseCategory('${type}')"
+          >
+          <button class="btn primary" onclick="MoreFeature.addExpenseCategory('${type}')">추가</button>
+        </div>
+      </section>
+    `;
+  },
+
+  addExpenseCategory(type) {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    const input = document.getElementById(`expenseCategoryInput-${type}`);
+    const category = String(input?.value || "").trim();
+
+    if (!category) {
+      alert("추가할 분류명을 입력하세요.");
+      input?.focus();
+      return;
+    }
+
+    const target = trip.expenseCategories[type] || [];
+    if (target.some(item => item.toLowerCase() === category.toLowerCase())) {
+      alert("이미 등록된 분류입니다.");
+      return;
+    }
+
+    target.push(category);
+    trip.expenseCategories[type] = target;
+
+    if (!AppState.save()) return;
+
+    this.showExpenseCategoryManager();
+  },
+
+  removeExpenseCategory(type, category) {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    const inUse = (trip.expenses || []).some(item =>
+      (item.expenseType === "pre" ? "pre" : "trip") === type
+      && item.category === category
+    );
+
+    if (inUse) {
+      alert(`"${category}" 분류는 현재 경비에서 사용 중이므로 삭제할 수 없습니다.`);
+      return;
+    }
+
+    const target = trip.expenseCategories[type] || [];
+    if (target.length <= 1) {
+      alert("분류는 최소 1개 이상 남겨야 합니다.");
+      return;
+    }
+
+    if (!confirm(`"${category}" 분류를 삭제할까요?`)) return;
+
+    trip.expenseCategories[type] = target.filter(item => item !== category);
+    if (!AppState.save()) return;
+
+    this.showExpenseCategoryManager();
+  },
+
+  showCurrencyManager() {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    UI.modal(`
+      <div class="modal-title">통화 관리</div>
+      <p class="small">영문 대문자 3글자로 입력하세요. 예: CHF, PLN, THB.</p>
+
+      <section class="settings-manager-section">
+        <div class="settings-chip-list">
+          ${trip.expenseCurrencies.map(currency => `
+            <div class="settings-chip">
+              <span>${Utils.escape(currency)}</span>
+              <button
+                type="button"
+                class="settings-delete-button"
+                onclick="MoreFeature.removeCurrency('${this.jsString(currency)}')"
+                aria-label="${Utils.escape(currency)} 삭제"
+              >×</button>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="settings-add-row">
+          <input
+            id="expenseCurrencyInput"
+            maxlength="3"
+            autocapitalize="characters"
+            placeholder="예: CHF"
+            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '')"
+            onkeydown="if(event.key === 'Enter') MoreFeature.addCurrency()"
+          >
+          <button class="btn primary" onclick="MoreFeature.addCurrency()">추가</button>
+        </div>
+      </section>
+
+      <div class="row-between manager-modal-footer">
+        <span></span>
+        <button class="btn primary" onclick="UI.closeModal()">닫기</button>
+      </div>
+    `);
+  },
+
+  addCurrency() {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    const input = document.getElementById("expenseCurrencyInput");
+    const currency = String(input?.value || "").trim().toUpperCase();
+
+    if (!/^[A-Z]{3}$/.test(currency)) {
+      alert("통화 코드는 영문 대문자 3글자로 입력하세요.");
+      input?.focus();
+      return;
+    }
+
+    if (trip.expenseCurrencies.includes(currency)) {
+      alert("이미 등록된 통화입니다.");
+      return;
+    }
+
+    trip.expenseCurrencies.push(currency);
+    if (!AppState.save()) return;
+
+    this.showCurrencyManager();
+  },
+
+  removeCurrency(currency) {
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    const inUse = (trip.expenses || []).some(item =>
+      String(item.currency || "").toUpperCase() === currency
+    );
+
+    if (inUse) {
+      alert(`${currency} 통화는 현재 경비에서 사용 중이므로 삭제할 수 없습니다.`);
+      return;
+    }
+
+    if (trip.expenseCurrencies.length <= 1) {
+      alert("통화는 최소 1개 이상 남겨야 합니다.");
+      return;
+    }
+
+    if (!confirm(`${currency} 통화를 삭제할까요?`)) return;
+
+    trip.expenseCurrencies = trip.expenseCurrencies.filter(item => item !== currency);
+    if (!AppState.save()) return;
+
+    this.showCurrencyManager();
   },
 
   showSharePanel() {
