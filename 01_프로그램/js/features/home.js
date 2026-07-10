@@ -77,14 +77,14 @@ window.HomeFeature = {
         `).join("") : UI.empty("없음")}
       </section>
 
-      <section class="card">
+      <section class="card pinned-overview-card">
         <div class="card-title">📌 핀한 일정</div>
-        ${pinnedSchedule.length ? pinnedSchedule.slice(0, 8).map(item => this.scheduleItemHtml(item)).join("") : UI.empty("핀한 일정이 없습니다.")}
-        ${pinnedBookings.length ? `
-          <div style="height:10px"></div>
-          <div class="small"><b>핀한 예약</b></div>
-          ${pinnedBookings.slice(0, 5).map(item => this.bookingItemHtml(item)).join("")}
-        ` : ""}
+        ${this.pinnedScheduleHtml(pinnedSchedule)}
+
+        <div class="pinned-section-divider"></div>
+
+        <div class="card-title pinned-booking-title">🎫 핀한 예약</div>
+        ${this.pinnedBookingHtml(pinnedBookings)}
       </section>
 
       <section class="card">
@@ -99,6 +99,145 @@ window.HomeFeature = {
         ${this.lastImportHtml(trip)}
       </section>
     `;
+  },
+
+  pinnedScheduleHtml(items) {
+    if (!Array.isArray(items) || !items.length) {
+      return UI.empty("핀한 일정이 없습니다.");
+    }
+
+    const groups = this.groupPinnedByDate(items, item => item.date);
+
+    return Object.keys(groups).map(date => `
+      <div class="pinned-date-group">
+        ${this.pinnedDateHeader(date, groups[date].length)}
+        <div class="pinned-date-items">
+          ${groups[date].map(item => this.pinnedScheduleItemHtml(item)).join("")}
+        </div>
+      </div>
+    `).join("");
+  },
+
+  pinnedBookingHtml(items) {
+    if (!Array.isArray(items) || !items.length) {
+      return UI.empty("핀한 예약이 없습니다.");
+    }
+
+    const sorted = [...items].sort((a, b) => {
+      const dateCompare = String(a.date || "").localeCompare(String(b.date || ""));
+      if (dateCompare !== 0) return dateCompare;
+      return String(a.time || "").localeCompare(String(b.time || ""));
+    });
+
+    const groups = this.groupPinnedByDate(sorted, item => item.date);
+
+    return Object.keys(groups).map(date => `
+      <div class="pinned-date-group">
+        ${this.pinnedDateHeader(date, groups[date].length)}
+        <div class="pinned-date-items">
+          ${groups[date].map(item => this.pinnedBookingItemHtml(item)).join("")}
+        </div>
+      </div>
+    `).join("");
+  },
+
+  groupPinnedByDate(items, getDate) {
+    return items.reduce((groups, item) => {
+      const normalized = Utils.normalizeDate?.(getDate(item)) || getDate(item) || "날짜 미정";
+      groups[normalized] ||= [];
+      groups[normalized].push(item);
+      return groups;
+    }, {});
+  },
+
+  pinnedDateHeader(date, count) {
+    return `
+      <div class="pinned-date-header">
+        <div>
+          <span class="pinned-date-icon">🗓</span>
+          <b>${Utils.escape(this.longDateText(date))}</b>
+        </div>
+        <span class="pinned-date-count">${count}개</span>
+      </div>
+    `;
+  },
+
+  longDateText(value) {
+    if (!value || value === "날짜 미정") return "날짜 미정";
+
+    const normalized = Utils.normalizeDate?.(value) || value;
+    const match = String(normalized).match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+    if (!match) return String(value);
+
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    const weekday = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+
+    return `${Number(match[2])}월 ${Number(match[3])}일 (${weekday})`;
+  },
+
+  pinnedScheduleItemHtml(item) {
+    const icon = this.scheduleTypeIcon(item);
+    const time = item.time || "시간 미정";
+    const city = item.city || "도시 미정";
+
+    return `
+      <div class="pinned-item ${item.done ? "done" : ""}">
+        <div class="pinned-item-icon" aria-hidden="true">${icon}</div>
+        <div class="pinned-item-body">
+          <div class="pinned-item-topline">
+            <span class="pinned-item-time">${Utils.escape(time)}</span>
+            <span class="pinned-item-city">${Utils.escape(city)}</span>
+          </div>
+          <div class="pinned-item-title">${Utils.escape(item.title || "제목 없음")}</div>
+          <div class="pinned-item-meta">
+            ${Utils.escape(item.type || "기타")}
+            ${Array.isArray(item.tags) && item.tags.length ? ` · ${item.tags.map(tag => Utils.escape(tag)).join(" · ")}` : ""}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  pinnedBookingItemHtml(item) {
+    const icon = this.bookingTypeIcon(item);
+    const time = item.time || "";
+    const category = item.category || "기타";
+
+    return `
+      <div class="pinned-item pinned-booking-item">
+        <div class="pinned-item-icon" aria-hidden="true">${icon}</div>
+        <div class="pinned-item-body">
+          <div class="pinned-item-topline">
+            <span class="pinned-item-time">${time ? Utils.escape(time) : Utils.escape(category)}</span>
+            ${time ? `<span class="pinned-item-city">${Utils.escape(category)}</span>` : ""}
+          </div>
+          <div class="pinned-item-title">${Utils.escape(item.title || "예약")}</div>
+          ${item.reservationNo ? `<div class="pinned-item-meta">예약번호: ${Utils.escape(item.reservationNo)}</div>` : ""}
+        </div>
+      </div>
+    `;
+  },
+
+  scheduleTypeIcon(item) {
+    const text = `${item?.type || ""} ${(item?.tags || []).join(" ")} ${item?.title || ""}`.toLowerCase();
+
+    if (/비행|공항|항공|이동|기차|버스|출발|도착/.test(text)) return "✈️";
+    if (/숙소|호텔|체크인|체크아웃|에어비앤비/.test(text)) return "🏨";
+    if (/식당|식사|레스토랑|카페|점심|저녁|아침/.test(text)) return "🍽️";
+    if (/관광|입장|투어|공원|성당|궁전|박물관|미술관/.test(text)) return "🎫";
+    if (/쇼핑|마트|시장/.test(text)) return "🛍️";
+    return "📌";
+  },
+
+  bookingTypeIcon(item) {
+    const text = `${item?.category || ""} ${item?.title || ""}`.toLowerCase();
+
+    if (/비행|항공|공항/.test(text)) return "✈️";
+    if (/숙소|호텔|에어비앤비/.test(text)) return "🏨";
+    if (/식당|레스토랑|카페/.test(text)) return "🍽️";
+    if (/기차|버스|교통/.test(text)) return "🚆";
+    if (/입장|투어|관광|공원|성당|궁전/.test(text)) return "🎫";
+    return "🧾";
   },
 
   scheduleItemHtml(item) {

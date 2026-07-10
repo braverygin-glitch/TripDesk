@@ -39,7 +39,7 @@ window.MoreFeature = {
 
       <section class="card">
         <div class="card-title">버전</div>
-        <p class="small">V1.7.2 클라우드 데이터 관리</p>
+        <p class="small">V1.8.0 핀한 일정 날짜별 정리</p>
       </section>
     `;
   },

@@ -1,3 +1,4 @@
+const CACHE_NAME = "tripdesk-v1-8-0-pinned-grouping";
 
 const ASSETS = [
   "./",
