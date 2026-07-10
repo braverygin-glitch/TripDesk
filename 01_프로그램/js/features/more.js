@@ -32,6 +32,16 @@ window.MoreFeature = {
         ${this.shareSummary(trip)}
       </section>
 
+
+      <section class="card">
+        <div class="card-title">경비 설정</div>
+        <p class="small">현재 여행에서 사용할 경비 분류와 통화를 관리합니다. 설정은 로컬과 Firebase 여행 데이터에 함께 저장됩니다.</p>
+        <div class="grid-2">
+          <button class="btn" onclick="MoreFeature.showExpenseCategoryManager()">경비 분류 관리</button>
+          <button class="btn" onclick="MoreFeature.showCurrencyManager()">통화 관리</button>
+        </div>
+      </section>
+
       <section class="card">
         <div class="card-title">엑셀 표준</div>
         <p class="small">날짜, 도시, 시간, 제목, 분류, 태그, 확정여부, 메모, 예약번호, 주소</p>
@@ -39,7 +49,7 @@ window.MoreFeature = {
 
       <section class="card">
         <div class="card-title">버전</div>
-        <p class="small">V1.8.0 핀한 일정 날짜별 정리</p>
+        <p class="small">V1.8.3 경비 분류·통화 관리</p>
       </section>
     `;
   },

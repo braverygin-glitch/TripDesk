@@ -389,63 +389,50 @@ window.ExpensesFeature = {
   },
 
   categoryOptions(selected, expenseType = "trip") {
-    const preCategories = [
-      "항공권",
-      "숙소",
-      "입장권",
-      "기차",
-      "버스",
-      "공항 교통",
-      "eSIM",
-      "여행자 보험",
-      "여행용품",
-      "환전 수수료",
-      "카메라 장비",
-      "캐리어",
-      "기타"
-    ];
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
 
-    const tripCategories = [
-      "식비",
-      "카페",
-      "교통",
-      "숙소",
-      "입장권",
-      "쇼핑",
-      "마트",
-      "기념품",
-      "통신",
-      "기타"
-    ];
+    const base = expenseType === "pre"
+      ? trip.expenseCategories.pre
+      : trip.expenseCategories.trip;
 
-    const base = expenseType === "pre" ? preCategories : tripCategories;
-    const categories = base.includes(selected) ? base : [selected, ...base];
+    const categories = selected && !base.includes(selected)
+      ? [selected, ...base]
+      : [...base];
 
     return categories
-      .filter((category, index, array) => array.indexOf(category) === index)
-      .map(category => `<option value="${category}" ${category === selected ? "selected" : ""}>${category}</option>`)
+      .filter((category, index, array) => category && array.indexOf(category) === index)
+      .map(category => `
+        <option value="${Utils.escape(category)}" ${category === selected ? "selected" : ""}>
+          ${Utils.escape(category)}
+        </option>
+      `)
       .join("");
   },
 
   preQuickCategories() {
-    return [
-      "항공권",
-      "숙소",
-      "입장권",
-      "기차",
-      "버스",
-      "공항 교통",
-      "eSIM",
-      "여행자 보험",
-      "여행용품",
-      "환전 수수료",
-      "기타"
-    ];
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+    return [...trip.expenseCategories.pre];
   },
 
   currencyOptions(selected) {
-    const currencies = ["EUR", "KRW", "USD", "CNY", "JPY", "TWD", "GBP"];
-    return currencies.map(currency => `<option value="${currency}" ${currency === selected ? "selected" : ""}>${currency}</option>`).join("");
+    const trip = AppState.currentTrip();
+    Utils.normalizeTrip(trip);
+
+    const normalizedSelected = String(selected || "").toUpperCase();
+    const currencies = normalizedSelected && !trip.expenseCurrencies.includes(normalizedSelected)
+      ? [normalizedSelected, ...trip.expenseCurrencies]
+      : [...trip.expenseCurrencies];
+
+    return currencies
+      .filter((currency, index, array) => currency && array.indexOf(currency) === index)
+      .map(currency => `
+        <option value="${Utils.escape(currency)}" ${currency === normalizedSelected ? "selected" : ""}>
+          ${Utils.escape(currency)}
+        </option>
+      `)
+      .join("");
   },
 
   paymentOptions(selected) {

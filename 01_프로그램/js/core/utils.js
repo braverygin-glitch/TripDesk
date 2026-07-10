@@ -209,6 +209,31 @@ window.Utils = {
     trip.schedule ||= [];
     trip.bookings ||= [];
     trip.expenses ||= [];
+    trip.expenseCategories ||= {
+      pre: [
+        "항공권", "숙소", "입장권", "기차", "버스", "공항 교통",
+        "eSIM", "여행자 보험", "여행용품", "환전 수수료",
+        "카메라 장비", "캐리어", "기타"
+      ],
+      trip: [
+        "식비", "카페", "교통", "숙소", "입장권",
+        "쇼핑", "마트", "기념품", "통신", "기타"
+      ]
+    };
+    trip.expenseCategories.pre = Array.from(new Set(
+      Array.isArray(trip.expenseCategories.pre) ? trip.expenseCategories.pre.filter(Boolean) : []
+    ));
+    trip.expenseCategories.trip = Array.from(new Set(
+      Array.isArray(trip.expenseCategories.trip) ? trip.expenseCategories.trip.filter(Boolean) : []
+    ));
+    trip.expenseCurrencies = Array.from(new Set(
+      (Array.isArray(trip.expenseCurrencies)
+        ? trip.expenseCurrencies
+        : ["EUR", "KRW", "USD", "CNY", "JPY", "TWD", "GBP"])
+        .map(code => String(code || "").trim().toUpperCase())
+        .filter(Boolean)
+    ));
+    if (!trip.expenseCurrencies.length) trip.expenseCurrencies = ["EUR"];
     trip.checklist ||= [];
     trip.notes ||= "";
     trip.lastImport ||= {
