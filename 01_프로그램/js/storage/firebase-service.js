@@ -13,6 +13,8 @@ window.FirebaseService = {
 
   saveTimer: null,
   autoStarted: false,
+  syncInProgress: false,
+  lastSyncAtKey: "tripdesk.firebase.lastSyncAt",
   unsubscribeTrips: null,
   unsubscribeAuthState: null,
 
@@ -583,13 +585,33 @@ window.FirebaseService = {
     if (!this.isReady() || !this.isSignedIn() || !this.syncEnabled) return;
 
     window.clearTimeout(this.saveTimer);
-    const snapshot = Utils.clone(trips);
+    const snapshot = Utils.clone(Array.isArray(trips) ? trips : []);
 
-    this.saveTimer = window.setTimeout(() => {
-      this.overwriteTrips(snapshot).catch(error => {
-        console.warn("Firebase background sync failed", error);
-        UI.setSaveStatus?.("● 로컬 저장됨 · 동기화 실패", "warn");
-      });
+    this.saveTimer = window.setTimeout(async () => {
+      if (this.syncInProgress) return;
+
+      this.syncInProgress = true;
+      UI.setSaveStatus?.("● 로컬 저장됨 · 클라우드 동기화 중", "saving");
+
+      try {
+        await this.uploadTrips(snapshot);
+        localStorage.setItem(this.lastSyncAtKey, new Date().toISOString());
+        UI.setSaveStatus?.("● 로컬·클라우드 저장됨", "ok");
+      } catch (firstError) {
+        console.warn("Firebase background sync first attempt failed", firstError);
+
+        try {
+          await new Promise(resolve => window.setTimeout(resolve, 1200));
+          await this.uploadTrips(snapshot);
+          localStorage.setItem(this.lastSyncAtKey, new Date().toISOString());
+          UI.setSaveStatus?.("● 로컬·클라우드 저장됨", "ok");
+        } catch (retryError) {
+          console.warn("Firebase background sync failed", retryError);
+          UI.setSaveStatus?.("● 로컬 저장됨 · 클라우드 동기화 실패", "warn");
+        }
+      } finally {
+        this.syncInProgress = false;
+      }
     }, 900);
   },
 
@@ -599,8 +621,10 @@ window.FirebaseService = {
 
     const { setDoc, serverTimestamp } = this.modules.firestore;
 
-    for (const trip of trips) {
-      const cleanTrip = Utils.clone(trip);
+    const sourceTrips = Array.isArray(trips) ? trips : [];
+
+    for (const trip of sourceTrips) {
+      const cleanTrip = Utils.normalizeTrip(Utils.clone(trip));
       cleanTrip.cloudUpdatedAt = new Date().toISOString();
       await setDoc(this.tripDocRef(cleanTrip.id), {
         ...cleanTrip,

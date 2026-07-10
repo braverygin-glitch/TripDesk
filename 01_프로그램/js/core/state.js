@@ -17,8 +17,20 @@ window.AppState = {
 
   save() {
     UI.setSaveStatus?.("● 저장 중...", "saving");
-    DataService.saveTrips(this.trips);
-    window.setTimeout(() => UI.setSaveStatus?.("● 저장됨", "ok"), 180);
+
+    try {
+      this.trips = (Array.isArray(this.trips) ? this.trips : [])
+        .map(trip => Utils.normalizeTrip(trip));
+
+      DataService.saveTrips(this.trips);
+      window.setTimeout(() => UI.setSaveStatus?.("● 저장됨", "ok"), 180);
+      return true;
+    } catch (error) {
+      console.error("AppState save failed", error);
+      UI.setSaveStatus?.("● 저장 실패 · 이전 백업 유지", "warn");
+      alert(error.message || "데이터 저장에 실패했습니다.");
+      return false;
+    }
   },
 
   currentTrip() {

@@ -69,7 +69,7 @@ window.ExpensesFeature = {
         ${Object.keys(byCity).length ? this.summaryHtml(byCity) : UI.empty("도시별 합계가 없습니다.")}
       </section>
       
-      ${window.ExpenseAnalysisFeature ? ExpenseAnalysisFeature.render(trip) : ""}
+      ${window.ExpenseAnalysisFeature ? ExpenseAnalysisFeature.safeRender(trip) : ""}
 
 <section class="card">
         <div class="card-title">여행 전 경비</div>

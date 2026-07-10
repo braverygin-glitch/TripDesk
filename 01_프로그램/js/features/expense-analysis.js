@@ -1,10 +1,25 @@
 window.ExpenseAnalysisFeature = {
   normalizedExpenses(trip) {
-    return (trip?.expenses || []).map(item => (
-      ExpensesFeature.normalizeExpense
-        ? ExpensesFeature.normalizeExpense(item)
-        : item
-    ));
+    const source = Array.isArray(trip?.expenses) ? trip.expenses : [];
+
+    return source.map(item => {
+      const normalized = ExpensesFeature.normalizeExpense
+        ? ExpensesFeature.normalizeExpense(item || {})
+        : { ...(item || {}) };
+
+      const amount = Number(normalized.amount || 0);
+
+      return {
+        ...normalized,
+        date: Utils.normalizeDate?.(normalized.date) || normalized.date || "",
+        city: String(normalized.city || "").trim(),
+        category: String(normalized.category || "기타").trim() || "기타",
+        currency: String(normalized.currency || "EUR").trim().toUpperCase() || "EUR",
+        amount: Number.isFinite(amount) ? amount : 0,
+        paymentMethod: String(normalized.paymentMethod || ""),
+        memo: String(normalized.memo || "")
+      };
+    }).filter(item => item.amount >= 0);
   },
 
   sumByCurrency(items) {
@@ -82,6 +97,20 @@ window.ExpenseAnalysisFeature = {
     `;
   },
 
+  safeRender(trip) {
+    try {
+      return this.render(trip);
+    } catch (error) {
+      console.error("Expense analysis render failed", error);
+      return `
+        <section class="card">
+          <div class="card-title">경비 분석</div>
+          <p class="small">분석 화면을 불러오지 못했습니다. 기존 경비 기록은 그대로 유지됩니다.</p>
+        </section>
+      `;
+    }
+  },
+
   render(trip) {
     const items = this.normalizedExpenses(trip);
     const byDate = this.sumByField(items, "date", "날짜 없음");
@@ -141,79 +170,105 @@ window.ExpenseAnalysisFeature = {
 
   showReport() {
     const trip = AppState.currentTrip();
-    if (!trip) return;
+    if (!trip) {
+      alert("열려 있는 여행이 없습니다.");
+      return;
+    }
 
-    const data = this.reportData(trip);
+    try {
+      const data = this.reportData(trip);
 
-    UI.modal(`
-      <div class="modal-title">여행 리포트</div>
+      UI.modal(`
+        <div class="report-modal-shell">
+          <div class="report-modal-header">
+            <div>
+              <div class="modal-title">여행 리포트</div>
+              <div class="small">${Utils.escape(trip.name || "여행")}</div>
+            </div>
+            <button
+              type="button"
+              class="btn ghost report-close-button"
+              data-modal-close
+              onclick="UI.closeModal()"
+              aria-label="여행 리포트 닫기"
+            >✕ 닫기</button>
+          </div>
 
-      <div class="report-cover">
-        <b>${Utils.escape(trip.name || "여행")}</b>
-        <span>${Utils.formatDate(trip.startDate)} ~ ${Utils.formatDate(trip.endDate)}</span>
-      </div>
+          <div class="report-modal-body">
+            <div class="report-cover">
+              <b>${Utils.escape(trip.name || "여행")}</b>
+              <span>${Utils.formatDate(trip.startDate)} ~ ${Utils.formatDate(trip.endDate)}</span>
+            </div>
 
-      <div class="report-stat-grid">
-        <div>
-          <span>경비 기록</span>
-          <b>${data.items.length}건</b>
-        </div>
-        <div>
-          <span>통화 수</span>
-          <b>${Object.keys(data.totals).length}개</b>
-        </div>
-      </div>
-
-      <div class="day-detail-section">
-        <div class="card-title">총 지출</div>
-        ${Object.keys(data.totals).length
-          ? Object.keys(data.totals).map(currency => `
-              <div class="report-total">
-                <b>${Utils.escape(currency)}</b>
-                <span>${ExpensesFeature.formatAmount(data.totals[currency], currency)}</span>
+            <div class="report-stat-grid">
+              <div>
+                <span>경비 기록</span>
+                <b>${data.items.length}건</b>
               </div>
-            `).join("")
-          : UI.empty("경비 기록이 없습니다.")}
-      </div>
+              <div>
+                <span>통화 수</span>
+                <b>${Object.keys(data.totals).length}개</b>
+              </div>
+            </div>
 
-      <div class="report-highlight-grid">
-        <div class="notice">
-          <b>가장 많이 지출한 도시</b><br>
-          ${data.topCity
-            ? `${Utils.escape(data.topCity.name)} · ${Utils.escape(data.topCity.currency)} ${ExpensesFeature.formatAmount(data.topCity.amount, data.topCity.currency)}`
-            : "데이터 없음"}
+            <div class="day-detail-section">
+              <div class="card-title">총 지출</div>
+              ${Object.keys(data.totals).length
+                ? Object.keys(data.totals).map(currency => `
+                    <div class="report-total">
+                      <b>${Utils.escape(currency)}</b>
+                      <span>${ExpensesFeature.formatAmount(data.totals[currency], currency)}</span>
+                    </div>
+                  `).join("")
+                : UI.empty("경비 기록이 없습니다.")}
+            </div>
+
+            <div class="report-highlight-grid">
+              <div class="notice">
+                <b>가장 많이 지출한 도시</b><br>
+                ${data.topCity
+                  ? `${Utils.escape(data.topCity.name)} · ${Utils.escape(data.topCity.currency)} ${ExpensesFeature.formatAmount(data.topCity.amount, data.topCity.currency)}`
+                  : "데이터 없음"}
+              </div>
+              <div class="notice">
+                <b>가장 많이 지출한 분류</b><br>
+                ${data.topCategory
+                  ? `${Utils.escape(data.topCategory.name)} · ${Utils.escape(data.topCategory.currency)} ${ExpensesFeature.formatAmount(data.topCategory.amount, data.topCategory.currency)}`
+                  : "데이터 없음"}
+              </div>
+            </div>
+
+            <div class="day-detail-section">
+              <div class="card-title">도시별</div>
+              ${this.reportRows(data.byCity)}
+            </div>
+
+            <div class="day-detail-section">
+              <div class="card-title">카테고리별</div>
+              ${this.reportRows(data.byCategory)}
+            </div>
+
+            <div class="day-detail-section">
+              <div class="card-title">날짜별</div>
+              ${this.reportRows(data.byDate)}
+            </div>
+          </div>
+
+          <div class="report-modal-footer">
+            <button type="button" class="btn" onclick="ExpenseAnalysisFeature.downloadCsv()">CSV 저장</button>
+            <button type="button" class="btn" onclick="ExpenseAnalysisFeature.printReport()">인쇄/PDF</button>
+            <button type="button" class="btn primary" onclick="UI.closeModal()">닫기</button>
+          </div>
         </div>
-        <div class="notice">
-          <b>가장 많이 지출한 분류</b><br>
-          ${data.topCategory
-            ? `${Utils.escape(data.topCategory.name)} · ${Utils.escape(data.topCategory.currency)} ${ExpensesFeature.formatAmount(data.topCategory.amount, data.topCategory.currency)}`
-            : "데이터 없음"}
-        </div>
-      </div>
-
-      <div class="day-detail-section">
-        <div class="card-title">도시별</div>
-        ${this.reportRows(data.byCity)}
-      </div>
-
-      <div class="day-detail-section">
-        <div class="card-title">카테고리별</div>
-        ${this.reportRows(data.byCategory)}
-      </div>
-
-      <div class="day-detail-section">
-        <div class="card-title">날짜별</div>
-        ${this.reportRows(data.byDate)}
-      </div>
-
-      <div class="row-between">
-        <button class="btn" onclick="ExpenseAnalysisFeature.downloadCsv()">CSV 저장</button>
-        <div class="row">
-          <button class="btn" onclick="ExpenseAnalysisFeature.printReport()">인쇄/PDF</button>
-          <button class="btn primary" onclick="UI.closeModal()">닫기</button>
-        </div>
-      </div>
-    `);
+      `, {
+        modalClass: "report-modal",
+        closeOnBackdrop: true,
+        closeOnEscape: true
+      });
+    } catch (error) {
+      console.error("Travel report failed", error);
+      alert("여행 리포트를 열지 못했습니다. 기존 경비 데이터는 변경되지 않았습니다.");
+    }
   },
 
   reportRows(summary = {}) {
