@@ -1,4 +1,4 @@
-const CACHE_NAME = "tripdesk-v1-8-1-share-hotfix";
+const CACHE_NAME = "tripdesk-v1-8-2-share-diagnostics";
 
 const ASSETS = [
   "./",
@@ -30,19 +30,56 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  const networkFirst = event.request.mode === "navigate"
+    || url.pathname.endsWith("/share.html")
+    || url.pathname.endsWith("/js/share-view.js")
+    || url.pathname.endsWith("/js/storage/firebase-config.js")
+    || url.pathname.endsWith("/js/storage/firebase-service.js");
+
+  if (networkFirst) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(event.request).then(response => {
+        if (response?.ok && url.origin === self.location.origin) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      });
+    })
+  );
 });

@@ -568,8 +568,42 @@ window.FirebaseService = {
     return true;
   },
 
+  async connectPublicFirestore() {
+    const config = await this.waitForConfig(3000);
+
+    if (!config) {
+      throw new Error("Firebase 설정을 찾지 못했습니다.");
+    }
+
+    if (this.db && this.modules.firestore?.getDoc) {
+      return true;
+    }
+
+    try {
+      const [appModule, firestoreModule] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+      ]);
+
+      this.modules.app = appModule;
+      this.modules.firestore = firestoreModule;
+
+      this.firebaseApp = appModule.getApps().length
+        ? appModule.getApps()[0]
+        : appModule.initializeApp(config);
+
+      this.db = firestoreModule.getFirestore(this.firebaseApp);
+      this.connected = true;
+      this.enabled = true;
+      return true;
+    } catch (error) {
+      console.error("Public Firestore connect failed", error);
+      throw new Error("공유 서버 연결에 실패했습니다.");
+    }
+  },
+
   async loadPublicShare(token) {
-    await this.connect();
+    await this.connectPublicFirestore();
 
     const { getDoc } = this.modules.firestore;
     const snapshot = await getDoc(this.publicShareDocRef(token));
