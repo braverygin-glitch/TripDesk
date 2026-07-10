@@ -61,19 +61,47 @@ window.UI = {
     el.className = `save-status ${mode}`;
   },
 
-  modal(html) {
+  modal(html, options = {}) {
+    this.closeModal();
+
     const wrap = document.createElement("div");
+    const modalClass = options.modalClass ? ` ${options.modalClass}` : "";
+
     wrap.className = "modal-backdrop";
     wrap.id = "modalBackdrop";
-    wrap.innerHTML = `<div class="modal">${html}</div>`;
+    wrap.innerHTML = `<div class="modal${modalClass}" role="dialog" aria-modal="true">${html}</div>`;
+
     wrap.addEventListener("click", event => {
-      if (event.target.id === "modalBackdrop") this.closeModal();
+      if (event.target.id === "modalBackdrop" && options.closeOnBackdrop !== false) {
+        this.closeModal();
+      }
     });
+
+    this.modalKeyHandler = event => {
+      if (event.key === "Escape" && options.closeOnEscape !== false) {
+        this.closeModal();
+      }
+    };
+
+    document.addEventListener("keydown", this.modalKeyHandler);
+    document.body.classList.add("modal-open");
+    window.BottomNavController?.hide("modal");
     document.body.appendChild(wrap);
+
+    window.setTimeout(() => {
+      wrap.querySelector("[data-modal-close], button, input, select, textarea")?.focus?.();
+    }, 0);
   },
 
   closeModal() {
     document.getElementById("modalBackdrop")?.remove();
+    document.body.classList.remove("modal-open");
+    window.BottomNavController?.show("modal");
+
+    if (this.modalKeyHandler) {
+      document.removeEventListener("keydown", this.modalKeyHandler);
+      this.modalKeyHandler = null;
+    }
   },
 
   empty(text) {
